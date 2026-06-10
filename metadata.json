@@ -1,0 +1,6 @@
+{
+  "name": "LogPromocional Tracker",
+  "description": "Sistema de logística promocional inteligente e rastreável B2B.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
