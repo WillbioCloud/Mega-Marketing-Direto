@@ -4,6 +4,7 @@
  */
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import Home from "./pages/Home";
 import Quote from "./pages/Quote";
 import Login from "./pages/admin/Login";
@@ -19,6 +20,7 @@ import MapEditor from "./pages/admin/MapEditor";
 export default function App() {
   return (
     <Router>
+      <Toaster position="top-right" toastOptions={{ style: { background: '#1e293b', color: '#f1f5f9', border: '1px solid #334155' } }} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/orcamento" element={<Quote />} />

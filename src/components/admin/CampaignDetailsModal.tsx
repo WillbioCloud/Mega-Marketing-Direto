@@ -1,8 +1,10 @@
-import { useState } from "react";
-import { X, Download, MapPin, Calendar, Camera, Users, Map, DollarSign, Activity, Image as ImageIcon, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, MapPin, Calendar, Camera, Users, Activity, Image as ImageIcon, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Campaign, AllocatedTeamMember } from "../../types";
 import { cn } from "../../lib/utils";
+import { supabase } from "../../lib/supabase";
+import toast from "react-hot-toast";
 
 interface CampaignDetailsModalProps {
   isOpen: boolean;
@@ -10,17 +12,53 @@ interface CampaignDetailsModalProps {
   campaign: Campaign | null;
 }
 
-const mockPhotos = [
-  { url: "https://images.unsplash.com/photo-1596701518331-50e567265a1f?auto=format&fit=crop&q=80&w=300&h=300", time: "09:15 AM", location: "Av. T-63, Bueno" },
-  { url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=300&h=300", time: "09:42 AM", location: "Rua 15, Marista" },
-  { url: "https://images.unsplash.com/photo-1588681664899-f142ff2dc9b1?auto=format&fit=crop&q=80&w=300&h=300", time: "10:05 AM", location: "Av. 85, Sul" },
-  { url: "https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&q=80&w=300&h=300", time: "10:30 AM", location: "Rua 9, Oeste" },
-  { url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=300&h=300", time: "11:15 AM", location: "Praça do Sol" },
-  { url: "https://images.unsplash.com/photo-1481277542470-605612bd2d61?auto=format&fit=crop&q=80&w=300&h=300", time: "11:45 AM", location: "Parque Flamboyant" }
-];
 
 export function CampaignDetailsModal({ isOpen, onClose, campaign }: CampaignDetailsModalProps) {
   const [activeTab, setActiveTab] = useState<'equipe' | 'provas'>('equipe');
+  const [photos, setPhotos] = useState<any[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'provas' && campaign?.id) {
+      fetchPhotos();
+    }
+  }, [activeTab, campaign?.id]);
+
+  const fetchPhotos = async () => {
+    if (!campaign?.id) return;
+    const { data, error } = await supabase.from('proofs').select('*').eq('campaign_id', campaign.id).order('created_at', { ascending: false });
+    if (!error && data) setPhotos(data);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0 || !campaign) return;
+    setUploading(true);
+
+    for (const file of Array.from(files)) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${campaign.id}/${Math.random()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage.from('proofs_images').upload(fileName, file);
+
+      if (uploadError) {
+        toast.error(`Erro ao enviar: ${file.name}`);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('proofs_images').getPublicUrl(fileName);
+
+      await supabase.from('proofs').insert({
+        campaign_id: campaign.id,
+        image_url: publicUrl,
+        location_text: 'Localização Registrada',
+      });
+    }
+
+    toast.success("Evidências salvas com sucesso!");
+    fetchPhotos();
+    setUploading(false);
+  };
 
   if (!isOpen || !campaign) return null;
 
@@ -132,41 +170,52 @@ export function CampaignDetailsModal({ isOpen, onClose, campaign }: CampaignDeta
                   exit={{ opacity: 0, x: 10 }}
                   className="space-y-4"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      Galeria de Evidências Fotográficas
-                    </h4>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-all">
-                      <Download className="w-4 h-4" /> Baixar Lote
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {mockPhotos.map((photo, i) => (
-                      <div key={i} className="group flex flex-col rounded-2xl overflow-hidden bg-slate-900/80 border border-slate-800 shadow-md hover:border-slate-700 transition-all">
-                        <div className="relative aspect-square overflow-hidden bg-slate-800">
-                          <img src={photo.url} alt={`Prova ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                          <div className="absolute top-3 right-3">
-                            <span className="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
-                              <CheckCircle2 className="w-3 h-3" /> Verificado
-                            </span>
-                          </div>
-                        </div>
-                        <div className="p-3.5 border-t border-slate-800 bg-slate-950/50 flex flex-col gap-2">
-                          <div className="flex items-start gap-2">
-                            <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
-                            <span className="text-xs font-semibold text-slate-200 leading-tight">{photo.location}</span>
-                          </div>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="bg-slate-900 border border-slate-700 text-slate-400 text-[10px] uppercase tracking-wider font-mono px-2 py-1 rounded flex items-center gap-1.5">
-                              <Calendar className="w-3 h-3 text-indigo-400" />
-                              {photo.time}
-                            </span>
-                            <span className="text-[10px] text-slate-500 font-medium">Foto Sync</span>
-                          </div>
-                        </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        Galeria de Evidências Fotográficas
+                      </h4>
+                      <div className="flex gap-2">
+                        <label className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-all cursor-pointer">
+                          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                          {uploading ? "Enviando..." : "Nova Foto"}
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                        </label>
                       </div>
-                    ))}
+                    </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {photos.length === 0 ? (
+                      <div className="col-span-3 flex flex-col items-center justify-center py-12 text-slate-500 gap-3">
+                        <Camera className="w-8 h-8 opacity-30" />
+                        <span className="text-sm">Nenhuma evidência registrada ainda.</span>
+                      </div>
+                    ) : (
+                      photos.map((photo, i) => (
+                        <div key={photo.id || i} className="group flex flex-col rounded-2xl overflow-hidden bg-slate-900/80 border border-slate-800 shadow-md hover:border-slate-700 transition-all">
+                          <div className="relative aspect-square overflow-hidden bg-slate-800">
+                            <img src={photo.image_url} alt={`Prova ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            <div className="absolute top-3 right-3">
+                              <span className="bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                                <CheckCircle2 className="w-3 h-3" /> Verificado
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-3.5 border-t border-slate-800 bg-slate-950/50 flex flex-col gap-2">
+                            <div className="flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-orange-400 flex-shrink-0 mt-0.5" />
+                              <span className="text-xs font-semibold text-slate-200 leading-tight">{photo.location_text || 'Localização Registrada'}</span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="bg-slate-900 border border-slate-700 text-slate-400 text-[10px] uppercase tracking-wider font-mono px-2 py-1 rounded flex items-center gap-1.5">
+                                <Calendar className="w-3 h-3 text-indigo-400" />
+                                {photo.created_at ? new Date(photo.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                              </span>
+                              <span className="text-[10px] text-slate-500 font-medium">Foto Sync</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </motion.div>
               )}

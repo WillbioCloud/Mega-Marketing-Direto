@@ -1,50 +1,62 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Download, CheckCircle2, DollarSign, Wallet, ArrowUpRight, ArrowDownRight, Search, FileText, TrendingUp } from "lucide-react";
 import { Payout, PayoutStatus } from "../../types";
 import { cn } from "../../lib/utils";
-
-const mockPayouts: Payout[] = [
-  { id: '1', workerName: 'Roberto Silva', campaignTitle: 'Lançamento Condomínio Oasis', amount: 150.00, pixKey: '62988881111', status: 'Pendente' },
-  { id: '2', workerName: 'Amanda Costa', campaignTitle: 'Lançamento Condomínio Oasis', amount: 120.00, pixKey: 'amanda.costa@email.com', status: 'Pago' },
-  { id: '3', workerName: 'Jorge Ferreira', campaignTitle: 'Promoção Dia das Mães', amount: 80.00, pixKey: '123.456.789-00', status: 'Pendente' },
-  { id: '4', workerName: 'Lucas Moura', campaignTitle: 'Promoção Dia das Mães', amount: 80.00, pixKey: 'lucasmoura@gmail.com', status: 'Pendente' },
-];
+import { supabase } from "../../lib/supabase";
+import toast from "react-hot-toast";
 
 export default function Finance() {
-  const [payouts, setPayouts] = useState<Payout[]>(mockPayouts);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ grossRevenue: 0, totalCosts: 0 });
+
+  useEffect(() => {
+    fetchFinanceData();
+  }, []);
+
+  const fetchFinanceData = async () => {
+    setLoading(true);
+
+    // 1. Buscar Pagamentos
+    const { data: payoutsData, error: payoutsError } = await supabase
+      .from('payouts').select('*').order('created_at', { ascending: false });
+    if (!payoutsError && payoutsData) {
+      setPayouts(payoutsData.map(p => ({
+        id: p.id, workerName: p.worker_name, campaignTitle: p.campaign_title,
+        amount: p.amount, pixKey: p.pix_key, status: p.status
+      })));
+    }
+
+    // 2. Calcular Faturamento Bruto
+    const { data: campaignsData } = await supabase.from('campaigns').select('revenue');
+    if (campaignsData) {
+      const gross = campaignsData.reduce((acc, curr) => acc + Number(curr.revenue), 0);
+      setStats(prev => ({ ...prev, grossRevenue: gross }));
+    }
+
+    setLoading(false);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleMarkAsPaid = async (id: string) => {
+    const { error } = await supabase.from('payouts').update({ status: 'Pago' }).eq('id', id);
+    if (error) {
+      toast.error("Erro ao registrar pagamento");
+    } else {
+      setPayouts(prev => prev.map(p => p.id === id ? { ...p, status: 'Pago' as PayoutStatus } : p));
+      toast.success("Pagamento processado com sucesso!");
+    }
   };
 
-  const handleMarkAsPaid = (id: string) => {
-    setPayouts(prev => prev.map(p => p.id === id ? { ...p, status: 'Pago' } : p));
-    showToast(`Pagamento processado com sucesso!`);
-  };
-
-  const totalGross = 45000.00;
-  const totalCosts = 12500.00; // Impressão + equipe
-
+  const totalCosts = stats.totalCosts;
+  const totalGross = stats.grossRevenue;
   const netProfit = totalGross - totalCosts;
 
   return (
     <div className="space-y-8 relative">
-      {/* Custom Toast */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-5">
-          <div className="bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3 font-medium">
-            <CheckCircle2 className="w-5 h-5" />
-            {toastMessage}
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

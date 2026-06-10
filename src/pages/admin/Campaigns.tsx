@@ -1,32 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MoreHorizontal, Plus, Search } from "lucide-react";
 import { CampaignDetailsModal } from "../../components/admin/CampaignDetailsModal";
+import { CreateCampaignModal } from "../../components/admin/CreateCampaignModal";
 import { cn } from "../../lib/utils";
 import { Campaign, CampaignStatus } from "../../types";
+import { supabase } from "../../lib/supabase";
+import toast from "react-hot-toast";
 
-const mockTeam = [
-  { id: '101', name: 'Roberto S.', phone: '(62) 98888-1111', avatar: 'https://i.pravatar.cc/150?img=11' },
-  { id: '102', name: 'Amanda C.', phone: '(62) 97777-2222', avatar: 'https://i.pravatar.cc/150?img=5' },
-  { id: '103', name: 'Jorge F.', phone: '(62) 96666-3333', avatar: 'https://i.pravatar.cc/150?img=15' },
-];
-
-const mockTeam2 = [
-  { id: '104', name: 'Lucas M.', phone: '(62) 95555-4444', avatar: 'https://i.pravatar.cc/150?img=33' },
-];
-
-const initialCampaigns: Record<string, Campaign[]> = {
-  agendado: [
-    { id: '1', title: 'Lançamento Condomínio Oasis', client: 'Construtora Apex', service: 'Porta a Porta', amount: '15.000', status: 'agendado', serviceColor: 'bg-indigo-500/20 text-indigo-400', revenue: 4500, allocatedTeam: mockTeam },
-    { id: '2', title: 'Inauguração Academia GymPro', client: 'GymPro Centro', service: 'Semáforo Premium', amount: '5.000', status: 'agendado', serviceColor: 'bg-fuchsia-500/20 text-fuchsia-400', revenue: 1200, allocatedTeam: mockTeam2 },
-  ],
-  emRota: [
-    { id: '3', title: 'Promoção Dia das Mães', client: 'Lojas União', service: 'Centro & Comércio', amount: '20.000', status: 'emRota', serviceColor: 'bg-orange-500/20 text-orange-400', revenue: 6000, allocatedTeam: mockTeam },
-    { id: '4', title: 'Plantão Residencial Sul', client: 'Mobi Imóveis', service: 'Bandeiradas Especiais', amount: 'N/A', status: 'emRota', serviceColor: 'bg-emerald-500/20 text-emerald-400', revenue: 2500, allocatedTeam: mockTeam2 },
-  ],
-  concluido: [
-    { id: '5', title: 'Feirão de Veículos Semi-novos', client: 'Auto Show', service: 'Semáforo Premium', amount: '10.000', status: 'concluido', serviceColor: 'bg-fuchsia-500/20 text-fuchsia-400', revenue: 3000, allocatedTeam: mockTeam },
-  ]
-};
 
 interface ColumnProps {
   title: string;
@@ -37,6 +17,36 @@ interface ColumnProps {
 
 export default function Campaigns() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [campaigns, setCampaigns] = useState<Record<string, Campaign[]>>({ agendado: [], emRota: [], concluido: [] });
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, []);
+
+  const fetchCampaigns = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+
+    if (error) {
+      toast.error("Erro ao carregar campanhas");
+    } else if (data) {
+      const grouped = {
+        agendado: data.filter(c => c.status === 'agendado').map(formatCampaign),
+        emRota: data.filter(c => c.status === 'emRota').map(formatCampaign),
+        concluido: data.filter(c => c.status === 'concluido').map(formatCampaign)
+      };
+      setCampaigns(grouped);
+    }
+    setLoading(false);
+  };
+
+  const formatCampaign = (c: any): Campaign => ({
+    id: c.id, title: c.title, client: c.client_name || 'Cliente B2B', service: c.service,
+    amount: c.amount.toString(), status: c.status, serviceColor: c.service_color,
+    revenue: c.revenue, allocatedTeam: []
+  });
 
   const Column = ({ title, status, count, items }: ColumnProps) => (
     <div className="flex flex-col bg-slate-900/50 border border-slate-800 rounded-3xl p-5 min-h-[500px]">
@@ -86,7 +96,10 @@ export default function Campaigns() {
         ))}
         
         {status === 'agendado' && (
-          <button className="flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-700/50 hover:border-slate-600 rounded-2xl text-slate-400 hover:text-slate-300 transition-colors text-sm font-medium">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-700/50 hover:border-indigo-500/50 rounded-2xl text-slate-400 hover:text-indigo-400 transition-colors text-sm font-medium"
+          >
             <Plus className="w-4 h-4" />
             Nova Campanha
           </button>
@@ -111,7 +124,10 @@ export default function Campaigns() {
               className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-64 transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors"
+          >
             <Plus className="w-4 h-4" />
             Nova Campanha
           </button>
@@ -119,15 +135,26 @@ export default function Campaigns() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 items-start">
-        <Column title="Agendado" status="agendado" count={initialCampaigns.agendado.length} items={initialCampaigns.agendado} />
-        <Column title="Ativa" status="emRota" count={initialCampaigns.emRota.length} items={initialCampaigns.emRota} />
-        <Column title="Concluído" status="concluido" count={initialCampaigns.concluido.length} items={initialCampaigns.concluido} />
+        {loading ? (
+          <div className="col-span-3 flex items-center justify-center py-20 text-slate-500">Carregando campanhas...</div>
+        ) : (
+          <>
+            <Column title="Agendado" status="agendado" count={campaigns.agendado.length} items={campaigns.agendado} />
+            <Column title="Ativa" status="emRota" count={campaigns.emRota.length} items={campaigns.emRota} />
+            <Column title="Concluído" status="concluido" count={campaigns.concluido.length} items={campaigns.concluido} />
+          </>
+        )}
       </div>
 
-      <CampaignDetailsModal 
-        isOpen={!!selectedCampaign} 
-        onClose={() => setSelectedCampaign(null)} 
-        campaign={selectedCampaign} 
+      <CampaignDetailsModal
+        isOpen={!!selectedCampaign}
+        onClose={() => setSelectedCampaign(null)}
+        campaign={selectedCampaign}
+      />
+      <CreateCampaignModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={fetchCampaigns}
       />
     </div>
   );

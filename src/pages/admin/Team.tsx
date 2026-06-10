@@ -1,15 +1,56 @@
+import { useState, useEffect } from "react";
 import { Search, Plus, Star, Phone } from "lucide-react";
 import { TeamMember } from "../../types";
-
-const teamData: TeamMember[] = [
-  { id: 1, name: "Roberto Silva", phone: "(62) 98888-1111", rating: 4.8, reviews: 124, status: "Em Atividade", avatar: "https://i.pravatar.cc/150?img=11" },
-  { id: 2, name: "Amanda Costa", phone: "(62) 97777-2222", rating: 4.9, reviews: 89, status: "Disponível", avatar: "https://i.pravatar.cc/150?img=5" },
-  { id: 3, name: "Jorge Ferreira", phone: "(62) 96666-3333", rating: 4.5, reviews: 210, status: "Em Atividade", avatar: "https://i.pravatar.cc/150?img=15" },
-  { id: 4, name: "Lucas Mendes", phone: "(62) 95555-4444", rating: 4.7, reviews: 56, status: "Indisponível", avatar: "https://i.pravatar.cc/150?img=33" },
-  { id: 5, name: "Fernanda Alves", phone: "(62) 94444-5555", rating: 5.0, reviews: 42, status: "Disponível", avatar: "https://i.pravatar.cc/150?img=42" },
-];
+import { supabase } from "../../lib/supabase";
+import toast from "react-hot-toast";
 
 export default function Team() {
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newMember, setNewMember] = useState({ name: '', phone: '', pix_key: '' });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchTeam();
+  }, []);
+
+  const fetchTeam = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('team_members').select('*').order('created_at', { ascending: false });
+    if (error) {
+      toast.error("Erro ao carregar equipa");
+    } else if (data) {
+      setTeam(data.map(d => ({
+        id: d.id, name: d.name, phone: d.phone, rating: d.rating,
+        reviews: d.reviews, status: d.status, avatar: d.avatar_url || 'https://i.pravatar.cc/150'
+      })));
+    }
+    setLoading(false);
+  };
+
+  const handleCreateTeamMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const { data, error } = await supabase.from('team_members').insert([{
+      name: newMember.name,
+      phone: newMember.phone,
+      pix_key: newMember.pix_key,
+      status: 'Disponível',
+      rating: 0,
+      reviews: 0,
+    }]).select();
+    if (error) {
+      toast.error('Erro ao cadastrar colaborador.');
+    } else if (data) {
+      toast.success('Colaborador cadastrado com sucesso!');
+      setIsCreateModalOpen(false);
+      setNewMember({ name: '', phone: '', pix_key: '' });
+      fetchTeam();
+    }
+    setSubmitting(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-8">
@@ -26,7 +67,10 @@ export default function Team() {
               className="pl-9 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-slate-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-64 transition-all"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors"
+          >
             <Plus className="w-4 h-4" />
             Novo Colaborador
           </button>
@@ -46,7 +90,11 @@ export default function Team() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
-              {teamData.map((member) => (
+              {loading ? (
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Carregando colaboradores...</td></tr>
+              ) : team.length === 0 ? (
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Nenhum colaborador cadastrado.</td></tr>
+              ) : team.map((member) => (
                 <tr key={member.id} className="hover:bg-slate-800/30 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -100,7 +148,7 @@ export default function Team() {
         
         {/* Pagination minimal */}
         <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/30 flex items-center justify-between text-sm text-slate-500">
-          <span>Mostrando 1 a 5 de 42 colaboradores</span>
+          <span>Mostrando {team.length} colaborador(es)</span>
           <div className="flex gap-2">
             <button className="px-3 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors disabled:opacity-50">Anterior</button>
             <button className="px-3 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors bg-slate-800 text-slate-200">1</button>
@@ -110,6 +158,64 @@ export default function Team() {
           </div>
         </div>
       </div>
+
+      {/* Modal Novo Colaborador */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Phone className="w-5 h-5 text-indigo-400" />
+                Novo Panfleteiro
+              </h2>
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+                <span className="text-xl leading-none">&times;</span>
+              </button>
+            </div>
+            <form onSubmit={handleCreateTeamMember} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Nome Completo</label>
+                <input
+                  type="text" required
+                  value={newMember.name}
+                  onChange={e => setNewMember(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Ex: Roberto Silva"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Telefone / WhatsApp</label>
+                <input
+                  type="tel" required
+                  value={newMember.phone}
+                  onChange={e => setNewMember(p => ({ ...p, phone: e.target.value }))}
+                  placeholder="(62) 98888-0000"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Chave PIX</label>
+                <input
+                  type="text" required
+                  value={newMember.pix_key}
+                  onChange={e => setNewMember(p => ({ ...p, pix_key: e.target.value }))}
+                  placeholder="CPF, e-mail, telefone ou chave aleatória"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                  {submitting ? 'Salvando...' : 'Cadastrar Colaborador'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

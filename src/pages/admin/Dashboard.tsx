@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Map, 
   TrendingUp,
@@ -19,6 +19,7 @@ import {
   AreaChart
 } from 'recharts';
 import { CreateCampaignModal } from "../../components/admin/CreateCampaignModal";
+import { supabase } from "../../lib/supabase";
 
 const chartData = [
   { name: 'Seg', entregas: 4000 },
@@ -38,6 +39,30 @@ const alerts = [
 
 export default function Dashboard() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [dashStats, setDashStats] = useState({ activeCampaigns: 0, activeTeam: 0, grossRevenue: 0, loadingStats: true });
+
+  useEffect(() => {
+    fetchDashStats();
+  }, []);
+
+  const fetchDashStats = async () => {
+    const [campaignsRes, teamRes, revenueRes] = await Promise.all([
+      supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('status', 'emRota'),
+      supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('status', 'Em Atividade'),
+      supabase.from('campaigns').select('revenue'),
+    ]);
+
+    const gross = revenueRes.data
+      ? revenueRes.data.reduce((acc, c) => acc + Number(c.revenue), 0)
+      : 0;
+
+    setDashStats({
+      activeCampaigns: campaignsRes.count ?? 0,
+      activeTeam: teamRes.count ?? 0,
+      grossRevenue: gross,
+      loadingStats: false,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -72,9 +97,11 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-white">42.850</span>
+            <span className="text-3xl font-bold text-white">
+              {dashStats.loadingStats ? '...' : new Intl.NumberFormat('pt-BR').format(dashStats.grossRevenue)}
+            </span>
             <span className="text-xs font-medium text-slate-400">
-               unidades
+               R$ acumulado
             </span>
           </div>
         </div>
@@ -87,7 +114,9 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-white">12</span>
+            <span className="text-3xl font-bold text-white">
+              {dashStats.loadingStats ? '...' : dashStats.activeCampaigns}
+            </span>
             <span className="flex text-xs font-medium text-slate-400 items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1.5 animate-pulse"></span>
               Em Execução
@@ -103,9 +132,11 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-white">94%</span>
+            <span className="text-3xl font-bold text-white">
+              {dashStats.loadingStats ? '...' : dashStats.activeTeam}
+            </span>
             <span className="text-xs font-medium text-emerald-400 flex items-center">
-              de taxa de conclusão
+              em atividade
             </span>
           </div>
         </div>

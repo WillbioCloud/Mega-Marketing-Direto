@@ -1,16 +1,55 @@
+import { useState, useEffect } from "react";
 import { Search, Plus, Building2, TrendingUp, BarChart3, Link as LinkIcon, MoreHorizontal, ExternalLink } from "lucide-react";
 import { ClientB2B } from "../../types";
 import { cn } from "../../lib/utils";
-
-const mockClients: ClientB2B[] = [
-  { id: '1', name: 'Construtora Apex', niche: 'Imobiliário', status: 'Mensal', ltv: 145000, activeCampaigns: 2, avatar: 'https://i.pravatar.cc/150?img=68' },
-  { id: '2', name: 'GymPro Centro', niche: 'Saúde & Esporte', status: 'Avulso', ltv: 15000, activeCampaigns: 1, avatar: 'https://i.pravatar.cc/150?img=33' },
-  { id: '3', name: 'Lojas União', niche: 'Varejo', status: 'Mensal', ltv: 340000, activeCampaigns: 3, avatar: 'https://i.pravatar.cc/150?img=47' },
-  { id: '4', name: 'Auto Show Motors', niche: 'Automotivo', status: 'Avulso', ltv: 25000, activeCampaigns: 1, avatar: 'https://i.pravatar.cc/150?img=11' },
-  { id: '5', name: 'Mobi Imóveis', niche: 'Imobiliário', status: 'Mensal', ltv: 85000, activeCampaigns: 2, avatar: 'https://i.pravatar.cc/150?img=5' },
-];
+import { supabase } from "../../lib/supabase";
+import toast from "react-hot-toast";
 
 export default function Clients() {
+  const [clients, setClients] = useState<ClientB2B[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newClient, setNewClient] = useState({ name: '', niche: '', status: 'Avulso' as 'Avulso' | 'Mensal' });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
+    if (error) {
+      toast.error("Erro ao carregar clientes");
+    } else if (data) {
+      setClients(data.map(c => ({
+        id: c.id, name: c.name, niche: c.niche, status: c.status,
+        ltv: c.ltv, activeCampaigns: c.active_campaigns,
+        avatar: c.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=1e293b&color=818cf8`
+      })));
+    }
+    setLoading(false);
+  };
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const { data, error } = await supabase.from('clients').insert([{
+      name: newClient.name,
+      niche: newClient.niche,
+      status: newClient.status,
+    }]).select();
+    if (error) {
+      toast.error('Erro ao criar cliente.');
+    } else if (data) {
+      toast.success('Cliente cadastrado com sucesso!');
+      setIsCreateModalOpen(false);
+      setNewClient({ name: '', niche: '', status: 'Avulso' });
+      fetchClients();
+    }
+    setSubmitting(false);
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
@@ -28,7 +67,10 @@ export default function Clients() {
             <Search className="w-4 h-4" />
             Filtrar
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/20">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-indigo-500/20"
+          >
             <Plus className="w-4 h-4" />
             Novo Cliente
           </button>
@@ -47,7 +89,7 @@ export default function Clients() {
             </div>
             <div className="text-slate-400 text-sm font-medium">Clientes Ativos</div>
           </div>
-          <div className="text-3xl font-bold text-white mb-2">42</div>
+          <div className="text-3xl font-bold text-white mb-2">{loading ? '...' : clients.length}</div>
           <div className="text-sm font-medium text-emerald-400 flex items-center gap-1.5">
             <TrendingUp className="w-4 h-4" /> +3 este mês
           </div>
@@ -105,7 +147,11 @@ export default function Clients() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {mockClients.map((client) => (
+              {loading ? (
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Carregando clientes...</td></tr>
+              ) : clients.length === 0 ? (
+                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Nenhum cliente cadastrado.</td></tr>
+              ) : clients.map((client) => (
                 <tr key={client.id} className="hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
@@ -144,6 +190,65 @@ export default function Clients() {
           </table>
         </div>
       </div>
+
+      {/* Modal Novo Cliente */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={() => setIsCreateModalOpen(false)} />
+          <div className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-indigo-400" />
+                Novo Cliente B2B
+              </h2>
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+                <span className="text-xl leading-none">&times;</span>
+              </button>
+            </div>
+            <form onSubmit={handleCreateClient} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Nome da Empresa</label>
+                <input
+                  type="text" required
+                  value={newClient.name}
+                  onChange={e => setNewClient(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Ex: Construtora Apex"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Nicho / Setor</label>
+                <input
+                  type="text" required
+                  value={newClient.niche}
+                  onChange={e => setNewClient(p => ({ ...p, niche: e.target.value }))}
+                  placeholder="Ex: Imobiliário, Varejo, Saúde..."
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-1.5">Tipo de Contrato</label>
+                <select
+                  value={newClient.status}
+                  onChange={e => setNewClient(p => ({ ...p, status: e.target.value as 'Avulso' | 'Mensal' }))}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                >
+                  <option value="Avulso">Avulso</option>
+                  <option value="Mensal">Mensal (Recorrente)</option>
+                </select>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="px-5 py-2.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={submitting} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                  {submitting ? 'Salvando...' : 'Cadastrar Cliente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
