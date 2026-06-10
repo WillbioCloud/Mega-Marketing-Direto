@@ -53,13 +53,13 @@ export default function Team() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white mb-2">Equipe de Panfleteiros</h1>
           <p className="text-slate-400 text-sm">Gerencie o cadastro, avaliações e disponibilidade do seu time.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
+        <div className="flex items-center gap-3">
+          <div className="relative hidden md:block">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
@@ -69,7 +69,7 @@ export default function Team() {
           </div>
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors w-full md:w-auto justify-center"
           >
             <Plus className="w-4 h-4" />
             Novo Colaborador
@@ -77,16 +77,16 @@ export default function Team() {
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-400">
+      <div className="w-full max-w-[calc(100vw-32px)] md:max-w-full mx-auto bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-sm">
+        <div className="overflow-x-auto rounded-b-3xl border-t-0 custom-scrollbar">
+          <table className="w-full text-left text-sm text-slate-400 min-w-[680px] whitespace-nowrap">
             <thead className="bg-slate-950/50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-800">
               <tr>
-                <th className="px-6 py-4">Colaborador</th>
-                <th className="px-6 py-4">Contato</th>
-                <th className="px-6 py-4 text-center">Avaliação (App)</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Ações</th>
+                <th className="px-6 py-4 whitespace-nowrap">Colaborador</th>
+                <th className="px-6 py-4 whitespace-nowrap">Contato</th>
+                <th className="px-6 py-4 text-center whitespace-nowrap">Avaliação (App)</th>
+                <th className="px-6 py-4 whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 text-right whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
@@ -96,7 +96,7 @@ export default function Team() {
                 <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Nenhum colaborador cadastrado.</td></tr>
               ) : team.map((member) => (
                 <tr key={member.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full border border-slate-700" />
                       <div>
@@ -105,13 +105,13 @@ export default function Team() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2 text-slate-300">
                       <Phone className="w-4 h-4 text-slate-500" />
                       {member.phone}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col items-center justify-center">
                       <div className="flex items-center gap-1 bg-yellow-500/10 text-yellow-500 px-2 py-1 rounded-md border border-yellow-500/20">
                         <Star className="w-3.5 h-3.5 fill-yellow-500" />
@@ -120,7 +120,7 @@ export default function Team() {
                       <span className="text-xs text-slate-500 mt-1">{member.reviews} avaliações</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
                       ${member.status === 'Em Atividade' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
                         member.status === 'Disponível' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 
@@ -135,7 +135,7 @@ export default function Team() {
                       {member.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right whitespace-nowrap">
                     <button className="text-indigo-400 hover:text-indigo-300 font-medium text-sm">
                       Detalhes
                     </button>
@@ -147,7 +147,7 @@ export default function Team() {
         </div>
         
         {/* Pagination minimal */}
-        <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/30 flex items-center justify-between text-sm text-slate-500">
+        <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500 text-center">
           <span>Mostrando {team.length} colaborador(es)</span>
           <div className="flex gap-2">
             <button className="px-3 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 transition-colors disabled:opacity-50">Anterior</button>

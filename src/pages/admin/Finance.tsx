@@ -63,12 +63,12 @@ export default function Finance() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Acertos e Financeiro</h1>
           <p className="text-sm text-slate-400">Fechamento diário, lucratividade e pagamentos da equipe.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-white text-sm font-medium rounded-xl transition-colors">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-white text-sm font-medium rounded-xl transition-colors">
             <Download className="w-4 h-4" />
             Relatório
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-emerald-500/20">
+          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-xl transition-colors shadow-lg shadow-emerald-500/20">
             <FileText className="w-4 h-4" />
             Exportar Remessa PIX
           </button>
@@ -127,7 +127,7 @@ export default function Finance() {
       </div>
 
       {/* Payout Table */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden flex flex-col">
+      <div className="w-full max-w-[calc(100vw-32px)] md:max-w-full mx-auto bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden flex flex-col">
         <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div>
             <h3 className="font-semibold text-white text-lg">Quadro de Pagamentos (Fechamento)</h3>
@@ -143,36 +143,36 @@ export default function Finance() {
           </div>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[700px] whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-500 bg-slate-900/40">
-                <th className="px-6 py-4 font-medium">Panfleteiro</th>
-                <th className="px-6 py-4 font-medium">Campanha Concluída</th>
-                <th className="px-6 py-4 font-medium">Chave PIX</th>
-                <th className="px-6 py-4 font-medium">Valor Diária</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium text-right">Ação Rápida</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Panfleteiro</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Campanha Concluída</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Chave PIX</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Valor Diária</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 font-medium text-right whitespace-nowrap">Ação Rápida</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {payouts.map((payout) => (
                 <tr key={payout.id} className="hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-semibold text-slate-200">{payout.workerName}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-slate-400">{payout.campaignTitle}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="bg-slate-950 border border-slate-800 px-2 py-1 rounded inline-flex items-center text-xs font-mono text-slate-400">
                       {payout.pixKey}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-bold text-white">{formatCurrency(payout.amount)}</div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     {payout.status === 'Pago' ? (
                       <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-400">
                         <CheckCircle2 className="w-4 h-4" />
@@ -185,7 +185,7 @@ export default function Finance() {
                       </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right whitespace-nowrap">
                     {payout.status === 'Pendente' ? (
                        <button 
                          onClick={() => handleMarkAsPaid(payout.id)}

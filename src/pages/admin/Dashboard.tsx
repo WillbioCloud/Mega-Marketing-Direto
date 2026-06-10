@@ -161,7 +161,7 @@ export default function Dashboard() {
               <option>Semana passada</option>
             </select>
           </div>
-          <div className="flex-1 min-h-[300px]">
+          <div className="w-full h-[300px] mt-4">
             {chartData.length === 0 ? (
               <div className="flex items-center justify-center h-full min-h-[300px] text-slate-600 text-sm">
                 Nenhuma campanha registrada ainda.

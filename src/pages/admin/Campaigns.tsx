@@ -20,6 +20,7 @@ export default function Campaigns() {
   const [campaigns, setCampaigns] = useState<Record<string, Campaign[]>>({ agendado: [], emRota: [], concluido: [] });
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [draggedItem, setDraggedItem] = useState<{id: string, sourceStatus: string} | null>(null);
 
   useEffect(() => {
     fetchCampaigns();
@@ -48,8 +49,57 @@ export default function Campaigns() {
     revenue: c.revenue, allocatedTeam: []
   });
 
+  const handleDragStart = (e: React.DragEvent, id: string, sourceStatus: string) => {
+    e.dataTransfer.effectAllowed = 'move';
+    setDraggedItem({ id, sourceStatus });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Permite que o item seja solto aqui
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetStatus: string) => {
+    e.preventDefault();
+    if (!draggedItem) return;
+    const { id, sourceStatus } = draggedItem;
+
+    if (sourceStatus === targetStatus) {
+      setDraggedItem(null);
+      return;
+    }
+
+    // 1. Atualização Otimista na UI (Move o card instantaneamente)
+    const itemToMove = campaigns[sourceStatus as keyof typeof campaigns].find(c => c.id === id);
+    if (!itemToMove) return;
+
+    setCampaigns(prev => {
+      const updatedItem = { ...itemToMove, status: targetStatus as CampaignStatus };
+      return {
+        ...prev,
+        [sourceStatus]: prev[sourceStatus as keyof typeof prev].filter(c => c.id !== id),
+        [targetStatus]: [updatedItem, ...prev[targetStatus as keyof typeof prev]]
+      };
+    });
+
+    // 2. Atualiza no Supabase em Background
+    const { error } = await supabase.from('campaigns').update({ status: targetStatus }).eq('id', id);
+    
+    if (error) {
+      toast.error("Erro ao mover campanha.");
+      fetchCampaigns(); // Reverte caso dê erro no banco
+    } else {
+      toast.success("Status atualizado!");
+    }
+    setDraggedItem(null);
+  };
+
   const Column = ({ title, status, count, items }: ColumnProps) => (
-    <div className="flex flex-col bg-slate-900/50 border border-slate-800 rounded-3xl p-5 min-h-[500px]">
+    <div 
+      onDragOver={handleDragOver}
+      onDrop={(e) => handleDrop(e, status)}
+      className="flex flex-col bg-slate-900/50 border border-slate-800 rounded-3xl p-5 min-h-[500px] w-[280px] sm:w-[320px] lg:w-full shrink-0 snap-center transition-colors hover:bg-slate-800/20"
+    >
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-semibold text-white flex items-center gap-3">
           <div className={cn(
@@ -69,8 +119,10 @@ export default function Campaigns() {
         {items.map((item) => (
           <div 
             key={item.id} 
+            draggable
+            onDragStart={(e) => handleDragStart(e, item.id, status)}
             onClick={() => setSelectedCampaign(item)}
-            className="group cursor-pointer bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-2xl p-4 transition-all"
+            className="group cursor-grab active:cursor-grabbing bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 hover:border-slate-600 rounded-2xl p-4 transition-all"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -110,13 +162,13 @@ export default function Campaigns() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Quadro Operacional</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">Quadro Operacional</h1>
           <p className="text-slate-400 text-sm">Gerencie o fluxo de entrega das campanhas ativas.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
+        <div className="flex items-center gap-3">
+          <div className="relative hidden md:block">
             <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input 
               type="text" 
@@ -126,7 +178,7 @@ export default function Campaigns() {
           </div>
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-medium text-sm rounded-xl transition-colors w-full md:w-auto justify-center"
           >
             <Plus className="w-4 h-4" />
             Nova Campanha
@@ -134,16 +186,21 @@ export default function Campaigns() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 items-start">
-        {loading ? (
-          <div className="col-span-3 flex items-center justify-center py-20 text-slate-500">Carregando campanhas...</div>
-        ) : (
-          <>
-            <Column title="Agendado" status="agendado" count={campaigns.agendado.length} items={campaigns.agendado} />
-            <Column title="Ativa" status="emRota" count={campaigns.emRota.length} items={campaigns.emRota} />
-            <Column title="Concluído" status="concluido" count={campaigns.concluido.length} items={campaigns.concluido} />
-          </>
-        )}
+      {/* Contêiner restrito à tela do celular para evitar vazar pro fundo branco */}
+      <div className="w-full max-w-[calc(100vw-32px)] md:max-w-full mx-auto">
+        <div className="overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
+          <div className="flex lg:grid lg:grid-cols-3 gap-6 flex-1 items-start w-max lg:w-full px-1">
+            {loading ? (
+              <div className="col-span-3 flex items-center justify-center py-20 text-slate-500 w-[80vw] lg:w-full">Carregando campanhas...</div>
+            ) : (
+              <>
+                <Column title="Agendado" status="agendado" count={campaigns.agendado.length} items={campaigns.agendado} />
+                <Column title="Ativa" status="emRota" count={campaigns.emRota.length} items={campaigns.emRota} />
+                <Column title="Concluído" status="concluido" count={campaigns.concluido.length} items={campaigns.concluido} />
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       <CampaignDetailsModal

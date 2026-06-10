@@ -132,7 +132,7 @@ export default function Clients() {
       </div>
 
       {/* Grid of Clients */}
-      <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden">
+      <div className="w-full max-w-[calc(100vw-32px)] md:max-w-full mx-auto bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden">
         <div className="p-6 border-b border-slate-800 flex items-center justify-between">
           <h3 className="font-semibold text-white">Carteira de Clientes</h3>
           <button className="text-slate-400 hover:text-white transition-colors">
@@ -140,15 +140,15 @@ export default function Clients() {
           </button>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[700px] whitespace-nowrap">
             <thead>
               <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-500 bg-slate-900/40">
-                <th className="px-6 py-4 font-medium">Empresa</th>
-                <th className="px-6 py-4 font-medium">Nicho</th>
-                <th className="px-6 py-4 font-medium">Status / Contrato</th>
-                <th className="px-6 py-4 font-medium">LTV (Total Gasto)</th>
-                <th className="px-6 py-4 font-medium text-right">Ações de Retenção</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Empresa</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Nicho</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">Status / Contrato</th>
+                <th className="px-6 py-4 font-medium whitespace-nowrap">LTV (Total Gasto)</th>
+                <th className="px-6 py-4 font-medium text-right whitespace-nowrap">Ações de Retenção</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
@@ -158,7 +158,7 @@ export default function Clients() {
                 <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Nenhum cliente cadastrado.</td></tr>
               ) : clients.map((client) => (
                 <tr key={client.id} className="hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-4">
                       <img src={client.avatar} alt={client.name} className="w-10 h-10 rounded-xl border border-slate-700 bg-slate-800 object-cover" />
                       <div>
@@ -167,10 +167,10 @@ export default function Clients() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-400">
+                  <td className="px-6 py-4 text-sm text-slate-400 whitespace-nowrap">
                     {client.niche}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={cn(
                       "text-xs font-semibold px-2.5 py-1 rounded-md border",
                       client.status === 'Mensal' 
@@ -180,10 +180,10 @@ export default function Clients() {
                       {client.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-slate-300">{formatCurrency(client.ltv)}</div>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right whitespace-nowrap">
                     <button className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-indigo-500 border border-slate-700 hover:border-indigo-400 text-slate-300 hover:text-white text-xs font-medium rounded-lg transition-all group-hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]">
                       <ExternalLink className="w-3.5 h-3.5" />
                       Link de Transparência

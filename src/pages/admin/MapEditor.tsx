@@ -340,7 +340,7 @@ export default function MapEditor() {
             </div>
           </div>
 
-          <div className="w-full h-[600px] bg-slate-950 rounded-2xl relative overflow-hidden border border-slate-800 z-10">
+          <div className="w-full h-[380px] sm:h-[450px] md:h-[520px] lg:h-[600px] bg-slate-950 rounded-2xl relative overflow-hidden border border-slate-800 z-10">
             <MapContainer 
               center={[-17.744, -48.625]} 
               zoom={14} 

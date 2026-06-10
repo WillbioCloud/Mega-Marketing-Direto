@@ -14,7 +14,9 @@ import {
   Wallet,
   CheckCircle2,
   AlertCircle,
-  Map
+  Map,
+  Menu,
+  X
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -39,6 +41,7 @@ export default function AdminLayout() {
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -51,6 +54,11 @@ export default function AdminLayout() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Fecha o menu mobile sempre que a rota mudar
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAllAsRead = () => {
@@ -59,9 +67,20 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex selection:bg-indigo-500/30 selection:text-indigo-200">
+      {/* Overlay para Mobile */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20">
-        <div className="h-16 flex items-center px-6 border-b border-slate-800">
+      <div className={cn(
+        "fixed inset-y-0 left-0 w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-50 transform transition-transform duration-300 md:translate-x-0",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      )}>
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
           <Link to="/admin" className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
               <span className="font-black text-xl leading-none font-sans">M</span>
@@ -71,6 +90,13 @@ export default function AdminLayout() {
               <span className="text-[9px] font-medium text-slate-400 tracking-widest uppercase leading-tight mt-0.5">marketing direto</span>
             </span>
           </Link>
+          {/* Botão fechar — visível apenas no mobile */}
+          <button
+            className="md:hidden p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -109,13 +135,23 @@ export default function AdminLayout() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      <div className="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
         {/* Topbar */}
         <header className="h-16 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 sticky top-0 z-10">
-          <div className="flex items-center text-sm font-medium text-slate-400">
-            <span className="hover:text-slate-200 cursor-pointer">Admin</span>
-            <ChevronRight className="w-4 h-4 mx-2 text-slate-600" />
-            <span className="text-slate-200">Dashboard</span>
+          <div className="flex items-center gap-4">
+            {/* Botão hambúrguer — visível apenas no mobile */}
+            <button
+              className="md:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            {/* Breadcrumb — visível apenas no desktop */}
+            <div className="hidden md:flex items-center text-sm font-medium text-slate-400">
+              <span className="hover:text-slate-200 cursor-pointer">Admin</span>
+              <ChevronRight className="w-4 h-4 mx-2 text-slate-600" />
+              <span className="text-slate-200">Dashboard</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
@@ -202,7 +238,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Content */}
-        <main className="flex-1 p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           <Outlet />
         </main>
       </div>
