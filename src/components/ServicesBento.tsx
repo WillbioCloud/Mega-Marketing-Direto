@@ -50,7 +50,7 @@ export function ServicesBento() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:auto-rows-[minmax(200px,auto)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 md:auto-rows-[minmax(200px,auto)]">
         {services.map((service, index) => {
           const isLarge = index === 0;
           return (
@@ -61,7 +61,7 @@ export function ServicesBento() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               key={service.title}
               className={cn(
-                "group relative overflow-hidden rounded-3xl border border-slate-200/60 p-6 md:p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
+                "group relative overflow-hidden rounded-3xl border border-slate-200/60 p-5 md:p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300",
                 service.className
               )}
             >

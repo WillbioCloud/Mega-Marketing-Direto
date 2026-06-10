@@ -21,40 +21,46 @@ import {
 import { CreateCampaignModal } from "../../components/admin/CreateCampaignModal";
 import { supabase } from "../../lib/supabase";
 
-const chartData = [
-  { name: 'Seg', entregas: 4000 },
-  { name: 'Ter', entregas: 3000 },
-  { name: 'Qua', entregas: 5200 },
-  { name: 'Qui', entregas: 4500 },
-  { name: 'Sex', entregas: 6000 },
-  { name: 'Sáb', entregas: 8000 },
-  { name: 'Dom', entregas: 1500 },
-];
-
-const alerts = [
-  { id: 1, type: 'warning', message: 'Relatório da campanha "Construtora Apex" pendente de envio.', time: 'Há 2h' },
-  { id: 2, type: 'info', message: 'Equipe Alfa (Setor Sul) finalizou a rota 4 do dia.', time: 'Há 45m' },
-  { id: 3, type: 'success', message: 'Pagamento da fatura #4092 confirmado.', time: 'Há 3h' },
-];
 
 export default function Dashboard() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [dashStats, setDashStats] = useState({ activeCampaigns: 0, activeTeam: 0, grossRevenue: 0, loadingStats: true });
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDashStats();
   }, []);
 
   const fetchDashStats = async () => {
-    const [campaignsRes, teamRes, revenueRes] = await Promise.all([
+    const [campaignsRes, teamRes, revenueRes, recentCampsRes] = await Promise.all([
       supabase.from('campaigns').select('id', { count: 'exact', head: true }).eq('status', 'emRota'),
       supabase.from('team_members').select('id', { count: 'exact', head: true }).eq('status', 'Em Atividade'),
       supabase.from('campaigns').select('revenue'),
+      supabase.from('campaigns').select('title, status, amount, created_at').order('created_at', { ascending: false }).limit(7)
     ]);
 
     const gross = revenueRes.data
       ? revenueRes.data.reduce((acc, c) => acc + Number(c.revenue), 0)
       : 0;
+
+    // Gerar Gráfico Real (7 campanhas mais recentes)
+    if (recentCampsRes.data && recentCampsRes.data.length > 0) {
+      const dynamicChart = [...recentCampsRes.data].reverse().map(c => ({
+        name: c.title.length > 10 ? c.title.substring(0, 10) + '...' : c.title,
+        entregas: Number(c.amount) || 0
+      }));
+      setChartData(dynamicChart);
+
+      // Gerar Alertas Reais
+      const dynamicAlerts = recentCampsRes.data.slice(0, 3).map((c, idx) => ({
+        id: idx,
+        type: c.status === 'concluido' ? 'success' : c.status === 'emRota' ? 'info' : 'warning',
+        message: `Campanha "${c.title}" está com status: ${c.status}.`,
+        time: new Date(c.created_at).toLocaleDateString('pt-BR')
+      }));
+      setAlerts(dynamicAlerts);
+    }
 
     setDashStats({
       activeCampaigns: campaignsRes.count ?? 0,
@@ -148,7 +154,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-base font-semibold text-white">Volume de Entregas</h3>
-              <p className="text-sm text-slate-400">Últimos 7 dias</p>
+              <p className="text-sm text-slate-400">Últimas 7 campanhas</p>
             </div>
             <select className="bg-slate-950 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2">
               <option>Esta semana</option>
@@ -156,7 +162,12 @@ export default function Dashboard() {
             </select>
           </div>
           <div className="flex-1 min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            {chartData.length === 0 ? (
+              <div className="flex items-center justify-center h-full min-h-[300px] text-slate-600 text-sm">
+                Nenhuma campanha registrada ainda.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorEntregas" x1="0" y1="0" x2="0" y2="1">
@@ -174,6 +185,7 @@ export default function Dashboard() {
                 <Area type="monotone" dataKey="entregas" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorEntregas)" />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </div>
         </div>
 

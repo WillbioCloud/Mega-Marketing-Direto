@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 export default function Clients() {
   const [clients, setClients] = useState<ClientB2B[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ mrr: 0, totalCampaigns: 0 });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newClient, setNewClient] = useState({ name: '', niche: '', status: 'Avulso' as 'Avulso' | 'Mensal' });
   const [submitting, setSubmitting] = useState(false);
@@ -27,6 +28,10 @@ export default function Clients() {
         ltv: c.ltv, activeCampaigns: c.active_campaigns,
         avatar: c.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}&background=1e293b&color=818cf8`
       })));
+      // Cálculo Dinâmico
+      const currentMRR = data.filter(c => c.status === 'Mensal').reduce((acc, curr) => acc + Number(curr.ltv), 0);
+      const activeCamps = data.reduce((acc, curr) => acc + Number(curr.active_campaigns), 0);
+      setStats({ mrr: currentMRR, totalCampaigns: activeCamps });
     }
     setLoading(false);
   };
@@ -90,8 +95,8 @@ export default function Clients() {
             <div className="text-slate-400 text-sm font-medium">Clientes Ativos</div>
           </div>
           <div className="text-3xl font-bold text-white mb-2">{loading ? '...' : clients.length}</div>
-          <div className="text-sm font-medium text-emerald-400 flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4" /> +3 este mês
+          <div className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+            Atualizado em tempo real
           </div>
         </div>
 
@@ -105,9 +110,9 @@ export default function Clients() {
             </div>
             <div className="text-slate-400 text-sm font-medium">MRR (Recorrente)</div>
           </div>
-          <div className="text-3xl font-bold text-white mb-2">R$ 185.500</div>
-          <div className="text-sm font-medium text-emerald-400 flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4" /> +12% do mês anterior
+          <div className="text-3xl font-bold text-white mb-2">{loading ? '...' : formatCurrency(stats.mrr)}</div>
+          <div className="text-sm font-medium text-slate-500 flex items-center gap-1.5">
+            Métrica atualizada em tempo real
           </div>
         </div>
 
@@ -121,8 +126,8 @@ export default function Clients() {
             </div>
             <div className="text-slate-400 text-sm font-medium">Campanhas no Mês</div>
           </div>
-          <div className="text-3xl font-bold text-white mb-2">124</div>
-          <div className="text-sm font-medium text-slate-500">68 ativas neste momento</div>
+          <div className="text-3xl font-bold text-white mb-2">{loading ? '...' : stats.totalCampaigns}</div>
+          <div className="text-sm font-medium text-slate-500">Campanhas atreladas aos clientes</div>
         </div>
       </div>
 

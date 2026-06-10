@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, ArrowRight, UserCircle2, Smartphone } from "lucide-react";
+import { MapPin, ArrowRight, UserCircle2, Smartphone, Menu, X } from "lucide-react";
 import { cn } from "../lib/utils";
 
 export function Navbar() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-md border-b border-white/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,6 +25,7 @@ export function Navbar() {
               </span>
             </Link>
           </div>
+          {/* Desktop Nav */}
           <div className="hidden md:flex space-x-6 items-center">
             <a href="#services" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Serviços</a>
             <a href="#tech" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Tecnologia</a>
@@ -38,8 +42,56 @@ export function Navbar() {
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+
+          {/* Mobile Hamburger Button */}
+          <button
+            className="md:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+            onClick={() => setIsMobileMenuOpen(prev => !prev)}
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
+            <a
+              href="#services"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+            >
+              Serviços
+            </a>
+            <a
+              href="#tech"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+            >
+              Tecnologia
+            </a>
+            <div className="h-px bg-slate-100 my-1" />
+            <Link
+              to="/admin/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors flex items-center gap-2"
+            >
+              <UserCircle2 className="w-4 h-4" />
+              Área Restrita
+            </Link>
+            <Link
+              to="/orcamento"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="mt-2 flex items-center justify-center gap-2 w-full px-5 py-3 text-sm font-semibold text-white gradient-bg rounded-xl shadow-md shadow-pink-200/50 transition-all"
+            >
+              <span>Orçamento Rápido</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

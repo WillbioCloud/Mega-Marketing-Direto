@@ -3,8 +3,8 @@ import { TrendingUp, Sparkles, Activity } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 md:pt-16">
-      <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 md:pt-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-8 items-center">
         {/* Left Column - Copy */}
         <div className="max-w-2xl">
           <motion.div 
@@ -20,7 +20,7 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-6"
+            className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-slate-900 leading-[1.1] mb-6"
           >
             Gestão logística avançada para <span className="gradient-text">escalar</span> suas vendas B2B.
           </motion.h1>
@@ -53,7 +53,7 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative lg:h-[500px] flex items-center justify-center"
+          className="relative lg:h-[500px] flex items-center justify-center mt-4 lg:mt-0"
         >
           {/* Subtle background glow */}
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-300/20 via-fuchsia-300/20 to-orange-300/20 blur-3xl rounded-full" />
@@ -117,11 +117,11 @@ export function Hero() {
             </div>
           </motion.div>
 
-          {/* Floating badge */}
+          {/* Floating badge - hidden on mobile to avoid overflow */}
           <motion.div 
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
-            className="absolute -right-6 top-12 bg-white rounded-xl shadow-lg border border-slate-100 p-3 flex items-center gap-3 z-10"
+            className="hidden lg:flex absolute -right-6 top-12 bg-white rounded-xl shadow-lg border border-slate-100 p-3 items-center gap-3 z-10"
           >
             <div className="relative">
               <img src="https://i.pravatar.cc/100?img=12" alt="Supervisor" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />

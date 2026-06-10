@@ -22,14 +22,14 @@ const features = [
 export function TechProof() {
   return (
     <section id="tech" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24 pb-24">
-      <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-16 relative overflow-hidden text-white">
+      <div className="bg-slate-900 rounded-[2rem] md:rounded-[2.5rem] p-6 sm:p-8 md:p-16 relative overflow-hidden text-white">
         {/* Abstract background shapes */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-fuchsia-500/20 rounded-full blur-3xl" />
         
-        <div className="relative z-10 grid lg:grid-cols-2 gap-16 items-center">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div>
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-6">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4 md:mb-6">
               A panfletagem antiga morreu. <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-fuchsia-300 to-orange-300">
                 Conheça o padrão 2.0
@@ -63,7 +63,7 @@ export function TechProof() {
             </div>
           </div>
 
-          <div className="lg:pl-10">
+          <div className="lg:pl-10 mt-2 lg:mt-0">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
