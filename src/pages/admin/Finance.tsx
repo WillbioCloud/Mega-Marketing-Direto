@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Download, CheckCircle2, DollarSign, Wallet, ArrowUpRight, ArrowDownRight, Search, FileText, TrendingUp } from "lucide-react";
+import { Download, CheckCircle2, DollarSign, Wallet, ArrowUpRight, ArrowDownRight, Search, FileText, TrendingUp, Settings, Save, Loader2 } from "lucide-react";
 import { Payout, PayoutStatus } from "../../types";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
@@ -9,6 +9,13 @@ export default function Finance() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ grossRevenue: 0, totalCosts: 0 });
+  const [pricing, setPricing] = useState({
+    id: '',
+    base_price_per_thousand: 0,
+    flag_price_per_hour: 0,
+    promoter_daily_capacity: 2
+  });
+  const [savingPricing, setSavingPricing] = useState(false);
 
   useEffect(() => {
     fetchFinanceData();
@@ -34,6 +41,12 @@ export default function Finance() {
       setStats(prev => ({ ...prev, grossRevenue: gross }));
     }
 
+    // 3. Buscar Configurações Globais de Preço
+    const { data: settingsData } = await supabase.from('global_settings').select('*').limit(1).single();
+    if (settingsData) {
+      setPricing(settingsData);
+    }
+
     setLoading(false);
   };
 
@@ -49,6 +62,23 @@ export default function Finance() {
       setPayouts(prev => prev.map(p => p.id === id ? { ...p, status: 'Pago' as PayoutStatus } : p));
       toast.success("Pagamento processado com sucesso!");
     }
+  };
+
+  const handleSavePricing = async () => {
+    if (!pricing.id) return;
+    setSavingPricing(true);
+    const { error } = await supabase.from('global_settings').update({
+      base_price_per_thousand: pricing.base_price_per_thousand,
+      flag_price_per_hour: pricing.flag_price_per_hour,
+      promoter_daily_capacity: pricing.promoter_daily_capacity
+    }).eq('id', pricing.id);
+
+    if (error) {
+      toast.error("Erro ao atualizar tabela de preços.");
+    } else {
+      toast.success("Precificação atualizada com sucesso!");
+    }
+    setSavingPricing(false);
   };
 
   const totalCosts = stats.totalCosts;
@@ -122,6 +152,73 @@ export default function Finance() {
           <div className="text-3xl font-bold text-emerald-400 mb-2">{formatCurrency(netProfit)}</div>
           <div className="text-sm font-medium text-emerald-500/70">
             Disponível após o fechamento
+          </div>
+        </div>
+      </div>
+
+      {/* Global Pricing Settings */}
+      <div className="w-full max-w-[calc(100vw-32px)] md:max-w-full mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+              <Settings className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-white text-lg">Tabela de Preços Globais</h3>
+              <p className="text-sm text-slate-400">Configuração de precificação base para os serviços da agência.</p>
+            </div>
+          </div>
+          <button 
+            onClick={handleSavePricing}
+            disabled={savingPricing}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+          >
+            {savingPricing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {savingPricing ? 'Salvando...' : 'Salvar Tabela'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Valor Base (Milheiro Porta a Porta)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">R$</span>
+              <input 
+                type="number" min="0" step="0.01"
+                value={pricing.base_price_per_thousand}
+                onChange={(e) => setPricing({...pricing, base_price_per_thousand: Number(e.target.value)})}
+                className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2 font-medium">Custo aplicado por cada 1.000 unidades distribuídas.</p>
+          </div>
+          
+          <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Ação de Bandeira (Valor/Hora)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">R$</span>
+              <input 
+                type="number" min="0" step="0.01"
+                value={pricing.flag_price_per_hour}
+                onChange={(e) => setPricing({...pricing, flag_price_per_hour: Number(e.target.value)})}
+                className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2 font-medium">Valor cobrado por CADA bandeira X horas do turno.</p>
+          </div>
+
+          <div className="bg-slate-950/50 p-5 rounded-2xl border border-slate-800">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Produtividade Padrão</label>
+            <div className="relative">
+              <input 
+                type="number" min="1" step="0.5"
+                value={pricing.promoter_daily_capacity}
+                onChange={(e) => setPricing({...pricing, promoter_daily_capacity: Number(e.target.value)})}
+                className="w-full pl-4 pr-16 py-3 bg-slate-900 border border-slate-700 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium text-xs">Milheiros/Dia</span>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-2 font-medium">Quantos milheiros 1 pessoa distribui por dia.</p>
           </div>
         </div>
       </div>

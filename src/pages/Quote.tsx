@@ -23,10 +23,14 @@ function ZoomController({ zones, selectedIds }: { zones: (NeighborhoodArea | Cus
 }
 
 export default function Quote() {
-  const [volume, setVolume] = useState<number>(5000);
+  const [volume, setVolume] = useState<number>(5);
   const [bairros, setBairros] = useState<NeighborhoodArea[]>([]);
   const [markers, setMarkers] = useState<CustomMarker[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>(['Porta a Porta']);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [leadForm, setLeadForm] = useState({ name: '', phone: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const loadZones = async () => {
@@ -70,16 +74,24 @@ export default function Quote() {
     );
   };
 
-  const generateWhatsAppMessage = () => {
-    const selectedNames: string[] = [];
-    bairros.forEach(b => { if (selectedIds.includes(b.id)) selectedNames.push(b.name); });
-    markers.forEach(m => { if (selectedIds.includes(m.id)) selectedNames.push(m.name); });
-
-    const zonesText = selectedNames.length > 0 
-      ? selectedNames.join(", ")
-      : "Nenhuma região extra selecionada";
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if(!leadForm.name || !leadForm.phone) return;
+    setIsSubmitting(true);
     
-    const text = `Olá! Simulei no site uma campanha de ${volume.toLocaleString("pt-BR")} panfletos em Caldas Novas.\n📍 Regiões de interesse: ${zonesText}.\n\nGostaria de receber o orçamento e a disponibilidade da equipe, por favor!`;
+    // Salva o Lead no Supabase
+    await supabase.from('clients').insert([{
+      name: leadForm.name, phone: leadForm.phone, niche: 'Site Lead', status: 'Lead',
+    }]);
+
+    // Formata a Mensagem do WhatsApp
+    const selectedNames = [...bairros, ...markers].filter(z => selectedIds.includes(z.id)).map(z => z.name);
+    const zonesText = selectedNames.length > 0 ? selectedNames.join(", ") : "Nenhuma extra";
+    
+    const text = `Olá! Sou ${leadForm.name}.\nSimulei no site uma campanha de ${volume} milheiros (${volume * 1000} panfletos).\n📍 Serviços: ${selectedServices.join(", ")}.\n📍 Regiões: ${zonesText}.`;
+    
+    setIsLeadModalOpen(false);
+    setIsSubmitting(false);
     window.open(`https://wa.me/5562999999999?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -120,37 +132,64 @@ export default function Quote() {
               {/* Control Panel */}
               <div className="p-8 lg:p-12 border-t lg:border-t-0 lg:border-r border-slate-200 flex flex-col gap-10">
                 
+                {/* Services Selection */}
+                <div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-slate-900">1. Tipos de Serviço</h3>
+                    <p className="text-sm text-slate-500">Selecione uma ou mais modalidades</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-8">
+                    {["Porta a Porta", "Semáforo Premium", "Bandeiradas Especiais", "Centro & Comércio"].map(service => {
+                      const isSelected = selectedServices.includes(service);
+                      return (
+                        <button
+                          key={service}
+                          onClick={() => setSelectedServices(prev => prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service])}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${
+                            isSelected ? "bg-indigo-50 border-indigo-200 ring-1 ring-indigo-500 text-indigo-700 font-semibold" : "bg-white border-slate-200 hover:border-slate-300 text-slate-600 font-medium"
+                          }`}
+                        >
+                          <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? "bg-indigo-500 border-indigo-500" : "border-slate-300"}`}>
+                            {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                          </div>
+                          <span className="text-sm leading-tight">{service}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
                 {/* Volume Control */}
                 <div>
                   <div className="flex justify-between items-end mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-slate-900">1. Volume da Campanha</h3>
+                      <h3 className="text-lg font-semibold text-slate-900">2. Volume da Campanha</h3>
                       <p className="text-sm text-slate-500">Quantidade de material impresso (Milheiros)</p>
                     </div>
                     <div className="text-2xl font-bold text-indigo-600">
-                      {volume.toLocaleString("pt-BR")} un
+                      {volume} Milheiro(s) <span className="text-sm font-medium text-slate-500">({volume * 1000} un)</span>
                     </div>
                   </div>
                   
                   <input
                     type="range"
-                    min="1000"
-                    max="50000"
-                    step="1000"
+                    min="1"
+                    max="50"
+                    step="1"
                     value={volume}
                     onChange={(e) => setVolume(Number(e.target.value))}
                     className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                   />
                   <div className="flex justify-between text-xs font-medium text-slate-400 mt-2">
-                    <span>1.000</span>
-                    <span>50.000</span>
+                    <span>1</span>
+                    <span>50</span>
                   </div>
                 </div>
 
                 {/* Zones Selection */}
                 <div>
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-slate-900">2. Estratégia Logística</h3>
+                    <h3 className="text-lg font-semibold text-slate-900">3. Estratégia Logística</h3>
                     <p className="text-sm text-slate-500">Selecione áreas e pontos chave para distribuição</p>
                   </div>
                   
@@ -287,7 +326,7 @@ export default function Quote() {
                   </div>
                   
                   <button 
-                    onClick={generateWhatsAppMessage}
+                    onClick={() => setIsLeadModalOpen(true)}
                     className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-bold text-base transition-all hover:shadow-lg hover:shadow-emerald-500/20"
                   >
                     <MessageCircle className="w-5 h-5" />
@@ -300,6 +339,57 @@ export default function Quote() {
           </div>
         </div>
       </main>
+
+      {isLeadModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-[9999]">
+          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Quase lá!</h2>
+            <p className="text-slate-500 mb-6">Para liberar seu orçamento e disponibilidade, como podemos te chamar?</p>
+            
+            <form onSubmit={handleLeadSubmit} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nome completo</label>
+                <input 
+                  type="text" 
+                  required
+                  value={leadForm.name}
+                  onChange={e => setLeadForm({...leadForm, name: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  placeholder="Seu nome"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">WhatsApp</label>
+                <input 
+                  type="tel" 
+                  required
+                  value={leadForm.phone}
+                  onChange={e => setLeadForm({...leadForm, phone: e.target.value})}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              
+              <div className="flex gap-3 mt-4">
+                <button 
+                  type="button" 
+                  onClick={() => setIsLeadModalOpen(false)}
+                  className="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Enviando...' : 'Ver Orçamento'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { MapPin, Save, Trash2, Map as MapIcon, ZoomIn, ZoomOut, Move, Hand, Hexagon, Check, Loader2 } from "lucide-react";
+import { MapPin, Save, Trash2, Map as MapIcon, ZoomIn, ZoomOut, Move, Hand, Hexagon, Check, Loader2, Edit2 } from "lucide-react";
 import { CustomMarker, NeighborhoodArea } from "../../types";
 import { supabase } from "../../lib/supabase";
-import { MapContainer, TileLayer, Marker, Polygon, Polyline, useMap, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polygon, Polyline, useMap, useMapEvents, Tooltip } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -95,6 +95,8 @@ export default function MapEditor() {
           name: z.name,
           basePrice: z.price_modifier,
           isActive: z.is_active,
+          required_flyers_thousands: z.required_flyers_thousands,
+          required_promoters: z.required_promoters,
           // coordinates armazenado como [[lat,lng],...] compatível com Leaflet
           points: Array.isArray(z.coordinates) ? z.coordinates : []
         }));
@@ -125,6 +127,9 @@ export default function MapEditor() {
   const [showAreaModal, setShowAreaModal] = useState(false);
   const [newAreaName, setNewAreaName] = useState("");
   const [newAreaPrice, setNewAreaPrice] = useState<number>(0);
+  const [newAreaFlyers, setNewAreaFlyers] = useState(5);
+  const [newAreaPromoters, setNewAreaPromoters] = useState(2);
+  const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
 
   const handleMapClick = (latlng: L.LatLng) => {
     if (interactionMode === 'marker') {
@@ -149,20 +154,47 @@ export default function MapEditor() {
     }
   };
 
+  const openEditAreaModal = (id: string) => {
+    const b = bairros.find(x => x.id === id);
+    if (b) {
+      setNewAreaName(b.name);
+      setNewAreaPrice(b.basePrice);
+      setNewAreaFlyers(b.required_flyers_thousands || 5);
+      setNewAreaPromoters(b.required_promoters || 2);
+      setEditingAreaId(id);
+      setShowAreaModal(true);
+    }
+  };
+
   const saveNewArea = () => {
-    const newArea: NeighborhoodArea = {
-      id: `a-${Date.now()}`,
-      name: newAreaName || "Nova Área",
-      basePrice: newAreaPrice,
-      isActive: true,
-      points: draftPolygon
-    };
-    setBairros([...bairros, newArea]);
+    if (editingAreaId) {
+      setBairros(bairros.map(b => b.id === editingAreaId ? { 
+        ...b, 
+        name: newAreaName, 
+        basePrice: newAreaPrice, 
+        required_flyers_thousands: newAreaFlyers, 
+        required_promoters: newAreaPromoters 
+      } : b));
+    } else {
+      const newArea: NeighborhoodArea = {
+        id: `a-${Date.now()}`,
+        name: newAreaName || "Nova Área",
+        basePrice: newAreaPrice,
+        isActive: true,
+        required_flyers_thousands: newAreaFlyers,
+        required_promoters: newAreaPromoters,
+        points: draftPolygon
+      };
+      setBairros([...bairros, newArea]);
+    }
     setDraftPolygon([]);
     setShowAreaModal(false);
     setInteractionMode('pan');
     setNewAreaName("");
     setNewAreaPrice(0);
+    setNewAreaFlyers(5);
+    setNewAreaPromoters(2);
+    setEditingAreaId(null);
   };
 
   const cancelNewArea = () => {
@@ -171,6 +203,9 @@ export default function MapEditor() {
     setInteractionMode('pan');
     setNewAreaName("");
     setNewAreaPrice(0);
+    setNewAreaFlyers(5);
+    setNewAreaPromoters(2);
+    setEditingAreaId(null);
   };
 
   // Markers Edit Map
@@ -209,6 +244,8 @@ export default function MapEditor() {
         name: b.name,
         price_modifier: b.basePrice,
         is_active: b.isActive,
+        required_flyers_thousands: b.required_flyers_thousands || 5,
+        required_promoters: b.required_promoters || 2,
         // Persiste o array [[lat,lng],...] do Leaflet directamente no JSONB
         coordinates: b.points
       }));
@@ -289,7 +326,10 @@ export default function MapEditor() {
                     <div className="text-[11px] text-slate-400">Adicional: R$ {bairro.basePrice.toFixed(2)}</div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => removeBairro(bairro.id)} className="text-slate-500 hover:text-red-400 transition-colors">
+                    <button onClick={() => openEditAreaModal(bairro.id)} className="text-slate-500 hover:text-indigo-400 transition-colors" title="Editar Bairro">
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => removeBairro(bairro.id)} className="text-slate-500 hover:text-red-400 transition-colors" title="Excluir">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                     <input 
@@ -379,9 +419,14 @@ export default function MapEditor() {
                   }}
                   eventHandlers={{
                     mouseover: () => setSelectedBairro(bairro.id),
-                    mouseout: () => setSelectedBairro(null)
+                    mouseout: () => setSelectedBairro(null),
+                    click: () => openEditAreaModal(bairro.id)
                   }}
-                />
+                >
+                  <Tooltip permanent direction="center" className="bg-transparent border-0 text-white font-bold text-[10px] md:text-xs uppercase tracking-wider drop-shadow-md shadow-none pointer-events-none opacity-90">
+                    {bairro.name}
+                  </Tooltip>
+                </Polygon>
               ))}
 
               {/* Marcadores Salvos */}
@@ -425,7 +470,7 @@ export default function MapEditor() {
             {showAreaModal && (
               <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm z-[600] flex items-center justify-center">
                 <div className="bg-slate-900 border border-slate-700/60 rounded-2xl p-6 w-[320px] shadow-2xl">
-                  <h3 className="text-lg font-bold text-white mb-4">Salvar Nova Área</h3>
+                  <h3 className="text-lg font-bold text-white mb-4">{editingAreaId ? 'Editar Área' : 'Salvar Nova Área'}</h3>
                   <div className="space-y-4">
                     <div>
                       <label className="text-xs uppercase tracking-wider text-slate-400 font-bold block mb-1.5">Nome do Bairro/Área</label>
@@ -447,6 +492,26 @@ export default function MapEditor() {
                         className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
                         placeholder="Ex: 50"
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mt-2">
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-1">Milheiros Necessários</label>
+                        <input 
+                          type="number" min="1"
+                          value={newAreaFlyers}
+                          onChange={e => setNewAreaFlyers(Number(e.target.value))}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block mb-1">Panfleteiros Ideais</label>
+                        <input 
+                          type="number" min="1"
+                          value={newAreaPromoters}
+                          onChange={e => setNewAreaPromoters(Number(e.target.value))}
+                          className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-3 pt-2">
                       <button 

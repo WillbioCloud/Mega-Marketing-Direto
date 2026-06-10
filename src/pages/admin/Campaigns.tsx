@@ -45,8 +45,11 @@ export default function Campaigns() {
 
   const formatCampaign = (c: any): Campaign => ({
     id: c.id, title: c.title, client: c.client_name || 'Cliente B2B', service: c.service,
+    services: c.services && c.services.length > 0 ? c.services : [c.service || 'Personalizado'],
     amount: c.amount.toString(), status: c.status, serviceColor: c.service_color,
-    revenue: c.revenue, allocatedTeam: []
+    revenue: c.revenue, allocatedTeam: [],
+    estimated_promoters: c.estimated_promoters,
+    logistics: c.logistics
   });
 
   const handleDragStart = (e: React.DragEvent, id: string, sourceStatus: string) => {
@@ -98,7 +101,7 @@ export default function Campaigns() {
     <div 
       onDragOver={handleDragOver}
       onDrop={(e) => handleDrop(e, status)}
-      className="flex flex-col bg-slate-900/50 border border-slate-800 rounded-3xl p-5 min-h-[500px] w-[280px] sm:w-[320px] lg:w-full shrink-0 snap-center transition-colors hover:bg-slate-800/20"
+      className="flex flex-col bg-slate-900/50 border border-slate-800 rounded-3xl p-5 h-[500px] lg:h-[calc(100vh-220px)] lg:max-h-[700px] w-[85vw] sm:w-[320px] lg:w-full shrink-0 snap-center"
     >
       <div className="flex items-center justify-between mb-6">
         <h3 className="font-semibold text-white flex items-center gap-3">
@@ -115,7 +118,7 @@ export default function Campaigns() {
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {items.map((item) => (
           <div 
             key={item.id} 
@@ -127,7 +130,7 @@ export default function Campaigns() {
             <div className="flex items-start justify-between mb-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={cn("text-xs font-semibold px-2.5 py-1 rounded-md", item.serviceColor)}>
-                  {item.service}
+                  {item.services[0]} {item.services.length > 1 && <span className="ml-1 opacity-70">(+{item.services.length - 1})</span>}
                 </span>
                 <span className={cn(
                   "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
@@ -139,7 +142,7 @@ export default function Campaigns() {
                 </span>
               </div>
               <span className="text-xs font-medium text-slate-400 bg-slate-900 px-2 py-1 rounded-md border border-slate-800">
-                {item.amount} un
+                {item.amount}k un
               </span>
             </div>
             <h4 className="font-bold text-slate-200 group-hover:text-white transition-colors mb-1">{item.title}</h4>
@@ -150,7 +153,7 @@ export default function Campaigns() {
         {status === 'agendado' && (
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-700/50 hover:border-indigo-500/50 rounded-2xl text-slate-400 hover:text-indigo-400 transition-colors text-sm font-medium"
+            className="shrink-0 mt-2 flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-700/50 hover:border-indigo-500/50 rounded-2xl text-slate-400 hover:text-indigo-400 transition-colors text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             Nova Campanha

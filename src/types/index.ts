@@ -21,7 +21,9 @@ export interface Campaign {
   id: string;
   title: string;
   client: string; // Nome ou referência
-  service: string;
+  services: string[];
+  estimated_promoters?: number;
+  logistics?: any;
   amount: string; // Na prática seria number, deixamos string para formatar K/M fácil no frontend visual
   serviceColor: string;
   status: CampaignStatus;
@@ -43,7 +45,7 @@ export interface ClientB2B {
   id: string;
   name: string;
   niche: string;
-  status: 'Mensal' | 'Avulso';
+  status: 'Mensal' | 'Avulso' | 'Lead';
   ltv: number;
   activeCampaigns: number;
   avatar: string;
@@ -73,5 +75,7 @@ export interface NeighborhoodArea {
   name: string;
   basePrice: number;
   isActive: boolean;
+  required_flyers_thousands?: number;
+  required_promoters?: number;
   points: [number, number][]; // Array of [lat, lng]
 }

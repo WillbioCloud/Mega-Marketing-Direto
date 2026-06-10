@@ -14,7 +14,62 @@ interface CampaignDetailsModalProps {
 
 
 export function CampaignDetailsModal({ isOpen, onClose, campaign }: CampaignDetailsModalProps) {
-  const [activeTab, setActiveTab] = useState<'equipe' | 'provas'>('equipe');
+  const [activeTab, setActiveTab] = useState<'geral' | 'equipe' | 'provas'>('geral');
+  const [availableMembers, setAvailableMembers] = useState<any[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+  const [allocating, setAllocating] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && campaign) {
+      fetchAvailableMembers();
+    }
+  }, [isOpen, campaign]);
+
+  const fetchAvailableMembers = async () => {
+    const { data } = await supabase
+      .from('team_members')
+      .eq('status', 'Disponível')
+      .order('name', { ascending: true });
+    if (data) setAvailableMembers(data);
+  };
+
+  const handleAllocateMember = async () => {
+    if (!selectedMemberId || !campaign) return;
+    setAllocating(true);
+
+    // 1. Criar o registro de repasse/trabalho inicial na tabela de payouts
+    const member = availableMembers.find(m => m.id.toString() === selectedMemberId);
+    if (!member) return;
+
+    // Busca o valor base configurado para calcular a diária padrão se necessário
+    const { data: settings } = await supabase.from('global_settings').select('base_price_per_thousand').single();
+    const amountToPay = (Number(campaign.amount) * Number(settings?.base_price_per_thousand || 80)) / (Number(campaign.estimated_promoters) || 1);
+
+    const { error: payoutError } = await supabase.from('payouts').insert([{
+      worker_name: member.name,
+      campaign_title: campaign.title,
+      amount: Math.round(amountToPay),
+      pix_key: member.pix_key || 'Não cadastrada',
+      status: 'Pendente'
+    }]);
+
+    if (!payoutError) {
+      // 2. Mudar o status do colaborador para "Em Atividade"
+      await supabase
+        .from('team_members')
+        .update({ status: 'Em Atividade' })
+        .eq('id', selectedMemberId);
+
+      toast.success(`${member.name} alocado com sucesso!`);
+      setSelectedMemberId("");
+      fetchAvailableMembers();
+      // Executa callback de atualização do pai se houver
+    } else {
+      toast.error("Erro ao alocar colaborador.");
+    }
+    setAllocating(false);
+  };
+
   const [photos, setPhotos] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -110,6 +165,15 @@ export function CampaignDetailsModal({ isOpen, onClose, campaign }: CampaignDeta
           {/* Tabs Nav */}
           <div className="flex px-6 space-x-1 bg-slate-900 border-b border-slate-800 overflow-x-auto hide-scrollbar">
             <button
+              onClick={() => setActiveTab('geral')}
+              className={cn(
+                "px-5 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
+                activeTab === 'geral' ? "border-indigo-500 text-indigo-400" : "border-transparent text-slate-400 hover:text-slate-200"
+              )}
+            >
+              <Activity className="w-4 h-4" /> Visão Geral
+            </button>
+            <button
               onClick={() => setActiveTab('equipe')}
               className={cn(
                 "px-5 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2",
@@ -132,14 +196,104 @@ export function CampaignDetailsModal({ isOpen, onClose, campaign }: CampaignDeta
           {/* Body */}
           <div className="flex-1 overflow-y-auto p-6 relative">
             <AnimatePresence mode="wait">
+              {activeTab === 'geral' && (
+                <motion.div
+                  key="geral"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  className="space-y-6"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Resumo da Missão */}
+                    <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-5 shadow-sm">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Escopo da Missão</h4>
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between border-b border-slate-800 pb-2">
+                          <span className="text-slate-500">Volume Total:</span>
+                          <span className="text-slate-200 font-bold">{campaign.amount}k Panfletos</span>
+                        </div>
+                        {campaign.services.includes("Bandeiradas Especiais") && campaign.logistics?.flagCount > 0 && (
+                          <div className="flex justify-between border-b border-slate-800 pb-2">
+                            <span className="text-slate-500">Ação de Bandeira:</span>
+                            <span className="text-emerald-400 font-bold">{campaign.logistics.flagCount} unid. | {campaign.logistics.flagDays} dias | {campaign.logistics.shiftHours}h</span>
+                          </div>
+                        )}
+                        <div className="pt-2">
+                          <span className="text-slate-500 block mb-2">Bairros e Pontos Alvo:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {campaign.logistics?.bairros && campaign.logistics.bairros.length > 0 ? (
+                              campaign.logistics.bairros.map((b: string, i: number) => (
+                                <span key={i} className="bg-slate-800 text-slate-300 text-[10px] px-2 py-1 rounded-md">{b}</span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-slate-600 italic">Áreas não especificadas.</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Meta de Equipe Progress */}
+                    <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-center">
+                      <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Meta de Alocação</h4>
+                      
+                      <div className="flex justify-between items-end mb-2">
+                        <span className="text-3xl font-bold text-white">{team.length} <span className="text-sm font-medium text-slate-500">/ {campaign.estimated_promoters || 0}</span></span>
+                        <span className="text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-lg">Panfleteiros</span>
+                      </div>
+                      
+                      <div className="w-full bg-slate-800 rounded-full h-3 mb-2 overflow-hidden">
+                        <div 
+                          className="bg-indigo-500 h-3 rounded-full transition-all duration-1000" 
+                          style={{ width: `${Math.min(((team.length / (campaign.estimated_promoters || 1)) * 100), 100)}%` }} 
+                        />
+                      </div>
+                      
+                      <p className="text-xs text-slate-500 text-right">
+                        {team.length >= (campaign.estimated_promoters || 0) 
+                          ? <span className="text-emerald-400">Equipe completa para a missão!</span> 
+                          : `Falta(m) ${(campaign.estimated_promoters || 0) - team.length} pessoa(s)`}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
               {activeTab === 'equipe' && (
                 <motion.div
                   key="equipe"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
-                  className="space-y-4"
+                  className="space-y-6"
                 >
+                  {/* Seletor de Alocação de Pessoal */}
+                  {campaign?.status !== 'concluido' && (
+                    <div className="bg-slate-950/40 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-end">
+                      <div className="flex-1 w-full">
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Disponíveis na rua</label>
+                        <select
+                          value={selectedMemberId}
+                          onChange={e => setSelectedMemberId(e.target.value)}
+                          className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-indigo-500"
+                        >
+                          <option value="">-- Selecione um colaborador disponível --</option>
+                          {availableMembers.map(m => (
+                            <option key={m.id} value={m.id}>{m.name} (★ {m.rating || 0})</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAllocateMember}
+                        disabled={allocating || !selectedMemberId}
+                        className="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all whitespace-nowrap"
+                      >
+                        {allocating ? 'Alocando...' : 'Confirmar Alocação'}
+                      </button>
+                    </div>
+                  )}
+
                   <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-500" />
                     Panfleteiros Escalados
