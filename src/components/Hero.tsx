@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { TrendingUp, Sparkles, Activity } from "lucide-react";
+import { TrendingUp, Sparkles, Activity, Building2, ShoppingBag, Store, Coffee } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function Hero() {
@@ -135,6 +135,36 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Trusted By / Parceiros Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.4 }}
+        className="mt-20 pt-10 border-t border-slate-200/60 pb-8"
+      >
+        <p className="text-center text-sm font-semibold text-slate-400 uppercase tracking-widest mb-8">
+          Empresas que confiam na nossa inteligência logística
+        </p>
+        <div className="flex flex-wrap justify-center gap-8 md:gap-16 items-center opacity-60 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500">
+          {/* Logo 1 */}
+          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
+            <Building2 className="w-7 h-7 text-indigo-600" /> FBZ Construtora
+          </div>
+          {/* Logo 2 */}
+          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
+            <ShoppingBag className="w-7 h-7 text-orange-500" /> Singapura Shopping
+          </div>
+          {/* Logo 3 */}
+          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
+            <Store className="w-7 h-7 text-emerald-600" /> Empadão Goiano
+          </div>
+          {/* Logo 4 */}
+          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
+            <Coffee className="w-7 h-7 text-amber-700" /> Ollivander Café
+          </div>
+        </div>
+      </motion.div>
     </section>
   );
 }

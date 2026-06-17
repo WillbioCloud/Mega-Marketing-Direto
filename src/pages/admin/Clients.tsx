@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Building2, TrendingUp, BarChart3, Link as LinkIcon, MoreHorizontal, ExternalLink } from "lucide-react";
+import { Search, Plus, Building2, TrendingUp, BarChart3, Link as LinkIcon, MoreHorizontal, ExternalLink, Star, ShoppingBag, Store, Coffee } from "lucide-react";
 import { ClientB2B } from "../../types";
 import { cn } from "../../lib/utils";
 import { supabase } from "../../lib/supabase";
@@ -128,6 +128,38 @@ export default function Clients() {
           </div>
           <div className="text-3xl font-bold text-white mb-2">{loading ? '...' : stats.totalCampaigns}</div>
           <div className="text-sm font-medium text-slate-500">Campanhas atreladas aos clientes</div>
+        </div>
+      </div>
+
+      {/* Vitrine de Marcas Parceiras (Site) */}
+      <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-indigo-500/5 to-transparent pointer-events-none" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 className="font-semibold text-white flex items-center gap-2">
+              <Star className="w-4 h-4 text-orange-400 fill-orange-400" /> 
+              Marcas em Destaque (Integração com o Site)
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Essas são as logos exibidas publicamente na Landing Page.</p>
+          </div>
+          <button className="text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl transition-colors border border-slate-700 w-max">
+            Gerenciar Logos
+          </button>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 text-slate-300 font-bold text-sm shadow-inner">
+            <Building2 className="w-4 h-4 text-indigo-500"/> FBZ Construtora
+          </div>
+          <div className="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 text-slate-300 font-bold text-sm shadow-inner">
+            <ShoppingBag className="w-4 h-4 text-orange-500"/> Singapura Shopping
+          </div>
+          <div className="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl flex items-center gap-2 text-slate-300 font-bold text-sm shadow-inner">
+            <Store className="w-4 h-4 text-emerald-500"/> Empadão Goiano
+          </div>
+          <div className="px-4 py-2.5 border border-dashed border-slate-700 rounded-xl flex items-center gap-2 text-slate-500 font-medium text-sm hover:text-slate-300 hover:border-slate-500 transition-colors cursor-pointer">
+            <Plus className="w-4 h-4"/> Adicionar Parceiro
+          </div>
         </div>
       </div>
 
