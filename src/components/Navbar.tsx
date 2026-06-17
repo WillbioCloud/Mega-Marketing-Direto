@@ -12,9 +12,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16 md:h-20">
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-orange-400 flex items-center justify-center text-white shadow-md shadow-fuchsia-200 group-hover:scale-105 transition-transform">
-                <span className="font-black text-xl leading-none font-sans">M</span>
-              </div>
+              <img src="/favicon.ico" alt="Mega Marketing" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
               <span className="flex flex-col">
                 <span className="font-bold text-xl tracking-tight text-slate-800 leading-none">
                   Mega

@@ -39,6 +39,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
   const [flagCount, setFlagCount] = useState<number>(0);
   const [shiftHours, setShiftHours] = useState<number>(4); // Padrão 4h ou 8h (dia todo)
   const [flagDays, setFlagDays] = useState<number>(1); // Quantidade de dias da ação
+  const [campaignDays, setCampaignDays] = useState(1); // Duração total da panfletagem
 
   useEffect(() => {
     if (isOpen) {
@@ -88,9 +89,9 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
       calcRevenue += flagCount * shiftHours * flagDays * flagRate;
     }
 
-    // Cálculo da Equipe Ideal
+    // Cálculo da Equipe Ideal (Por Dia)
     const capacity = Number(settings?.promoter_daily_capacity || 2);
-    let promoters = Math.ceil(Number(form.amount) / capacity);
+    let promoters = Math.ceil((Number(form.amount) / capacity) / campaignDays);
     
     // Adiciona 1 pessoa dedicada (braço) para cada bandeira
     if (selectedServices.includes("Bandeiradas Especiais")) {
@@ -107,7 +108,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
     
     // Atualiza o form.revenue evitando loop infinito
     setForm(prev => prev.revenue !== calcRevenue ? { ...prev, revenue: calcRevenue } : prev);
-  }, [form.amount, selectedBairros, selectedServices, flagCount, shiftHours, flagDays, bairros, settings]);
+  }, [form.amount, selectedBairros, selectedServices, flagCount, shiftHours, flagDays, bairros, settings, campaignDays]);
 
   const fetchClients = async () => {
     const { data } = await supabase.from("clients").select("id, name").order("name");
@@ -139,6 +140,7 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
       estimated_promoters: estimatedPromoters,
       logistics: {
         bairros: bairros.filter(b => selectedBairros.includes(b.id)).map(b => b.name),
+        campaignDays,
         flagCount,
         flagDays,
         shiftHours
@@ -302,13 +304,17 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
                     <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Resumo Operacional</h3>
                     <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-mono border border-indigo-500/20">Calculado automaticamente</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">Carga (Milheiros)</div>
+                      <div className="text-xs text-slate-500 mb-1">Carga Total</div>
                       <div className="text-lg font-bold text-white">{form.amount} <span className="text-xs text-slate-500 font-normal">k</span></div>
                     </div>
                     <div>
-                      <div className="text-xs text-slate-500 mb-1">Equipe Padrão</div>
+                      <div className="text-xs text-slate-500 mb-1">Duração</div>
+                      <div className="text-lg font-bold text-white">{campaignDays} <span className="text-xs text-slate-500 font-normal">dia(s)</span></div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500 mb-1">Equipe/Dia</div>
                       <div className="text-lg font-bold text-indigo-400">{estimatedPromoters} <span className="text-xs text-indigo-500/70 font-normal">pessoas</span></div>
                     </div>
                     <div>
@@ -320,10 +326,10 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
                   </div>
                 </div>
 
-                {/* Grid de Quantidade e Receita */}
-                <div className="grid grid-cols-2 gap-5 bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4">
+                {/* Grid Final de Ajustes */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4">
                   <div>
-                    <label className="block text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">Ajustar Milheiros</label>
+                    <label className="block text-[10px] font-bold text-indigo-300 uppercase tracking-wider mb-2">Ajustar Milheiros</label>
                     <input
                       type="number" required min="1"
                       value={form.amount}
@@ -332,12 +338,20 @@ export function CreateCampaignModal({ isOpen, onClose, onSuccess }: CreateCampai
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-emerald-300 uppercase tracking-wider mb-2">Receita Final Fechada (R$)</label>
+                    <label className="block text-[10px] font-bold text-indigo-300 uppercase tracking-wider mb-2">Dias de Panfletagem</label>
+                    <input
+                      type="number" required min="1"
+                      value={campaignDays}
+                      onChange={e => setCampaignDays(Number(e.target.value))}
+                      className="w-full px-4 py-2 bg-slate-900/50 border border-indigo-500/30 rounded-lg text-white font-bold focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-emerald-300 uppercase tracking-wider mb-2">Receita Acordada (R$)</label>
                     <input
                       type="number" min="0" step="0.01"
                       value={form.revenue}
                       onChange={e => setForm(p => ({ ...p, revenue: Number(e.target.value) }))}
-                      placeholder="Ex: 4500"
                       className="w-full px-4 py-2 bg-slate-900/50 border border-emerald-500/30 rounded-lg text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     />
                   </div>

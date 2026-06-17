@@ -211,7 +211,7 @@ export function CampaignDetailsModal({ isOpen, onClose, campaign }: CampaignDeta
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between border-b border-slate-800 pb-2">
                           <span className="text-slate-500">Volume Total:</span>
-                          <span className="text-slate-200 font-bold">{campaign.amount}k Panfletos</span>
+                          <span className="text-slate-200 font-bold">{campaign.amount}k em {campaign.logistics?.campaignDays || 1} dia(s)</span>
                         </div>
                         {campaign.services.includes("Bandeiradas Especiais") && campaign.logistics?.flagCount > 0 && (
                           <div className="flex justify-between border-b border-slate-800 pb-2">

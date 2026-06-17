@@ -14,13 +14,13 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(135deg, #4f46e5, #c026d3, #f97316);
+  background-image: linear-gradient(135deg, #7e22ce, #d946ef, #f97316);
 }
 
 .gradient-bg {
-  background-image: linear-gradient(135deg, #4f46e5, #c026d3, #f97316);
+  background-image: linear-gradient(135deg, #7e22ce, #d946ef, #f97316);
 }
 
 .gradient-bg-subtle {
-  background-image: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(192, 38, 211, 0.05), rgba(249, 115, 22, 0.05));
+  background-image: linear-gradient(135deg, rgba(126, 34, 206, 0.05), rgba(217, 70, 239, 0.05), rgba(249, 115, 22, 0.05));
 }

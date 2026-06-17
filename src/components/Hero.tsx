@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { TrendingUp, Sparkles, Activity } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Hero() {
   return (
@@ -38,10 +39,10 @@ export function Hero() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-wrap gap-4"
           >
-            <button className="px-8 py-3.5 text-base font-semibold text-white gradient-bg rounded-xl shadow-lg shadow-fuchsia-200/60 hover:-translate-y-1 hover:shadow-xl transition-all flex items-center gap-2">
+            <Link to="/orcamento" className="px-8 py-3.5 text-base font-semibold text-white gradient-bg rounded-xl shadow-lg shadow-fuchsia-200/60 hover:-translate-y-1 hover:shadow-xl transition-all flex items-center gap-2 w-max">
               <TrendingUp className="w-5 h-5" />
               <span>Agendar Distribuição</span>
-            </button>
+            </Link>
             <button className="px-8 py-3.5 text-base font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl shadow-sm transition-all focus:ring-2 focus:ring-indigo-100">
               Ver Como Funciona
             </button>
@@ -82,7 +83,7 @@ export function Hero() {
             {/* Map/Image Placeholder */}
             <div className="rounded-2xl overflow-hidden bg-slate-100 aspect-video mb-6 relative border border-slate-200/50 shadow-inner group">
               <img 
-                src="https://images.unsplash.com/photo-1596701518331-50e567265a1f?auto=format&fit=crop&q=80&w=800&h=450" 
+                src="/img/Distribuicao-de-panfletos.webp" 
                 alt="Distribuição de panfletos"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />

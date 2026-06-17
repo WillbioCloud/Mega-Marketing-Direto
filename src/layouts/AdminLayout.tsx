@@ -82,9 +82,7 @@ export default function AdminLayout() {
       )}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
           <Link to="/admin" className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
-              <span className="font-black text-xl leading-none font-sans">M</span>
-            </div>
+            <img src="/logo-icon.png" alt="Mega Marketing" className="w-8 h-8 object-contain" />
             <span className="flex flex-col">
               <span className="font-bold text-lg text-white tracking-tight leading-none">Mega</span>
               <span className="text-[9px] font-medium text-slate-400 tracking-widest uppercase leading-tight mt-0.5">marketing direto</span>

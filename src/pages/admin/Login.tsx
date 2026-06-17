@@ -31,17 +31,7 @@ export default function Login() {
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 selection:bg-indigo-500/30 selection:text-indigo-200">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex justify-center items-center gap-3 group">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-orange-400 flex items-center justify-center text-white shadow-lg shadow-fuchsia-900/20 group-hover:scale-105 transition-transform">
-            <span className="font-black text-3xl leading-none font-sans">M</span>
-          </div>
-          <span className="flex flex-col">
-            <span className="font-bold text-3xl tracking-tight text-white leading-none">
-              Mega
-            </span>
-            <span className="text-[11px] font-medium text-slate-400 tracking-widest uppercase leading-tight mt-1">
-              marketing direto
-            </span>
-          </span>
+          <img src="/Logo Mega.png" alt="Mega Marketing" className="w-28 h-28 object-contain scale-140 group-hover:scale-150 transition-transform drop-shadow-[0_0_15px_rgba(217,70,239,0.3)]" />
         </Link>
         <h2 className="mt-8 text-center text-2xl font-bold tracking-tight text-slate-200">
           Acesso Operacional
@@ -77,7 +67,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@megamarketing.com"
+                  placeholder="admin@email.com"
                   className="block w-full rounded-xl border-0 py-3 pl-10 pr-4 bg-slate-950 text-white shadow-sm ring-1 ring-inset ring-slate-800 placeholder:text-slate-600 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 transition-all"
                 />
               </div>
