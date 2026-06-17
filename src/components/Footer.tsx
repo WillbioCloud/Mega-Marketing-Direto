@@ -1,4 +1,5 @@
 import { MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export function Footer() {
   return (
@@ -17,13 +18,13 @@ export function Footer() {
         </div>
         
         <p className="text-slate-500 text-sm font-medium">
-          © {new Date().getFullYear()} Mega Marketing Direto. Todos os direitos reservados.
+          © 2015 - {new Date().getFullYear()} Mega Marketing Direto. Todos os direitos reservados.
         </p>
 
         <div className="flex items-center gap-6">
-          <a href="#" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Termos</a>
-          <a href="#" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Privacidade</a>
-          <a href="#" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Contato</a>
+          <Link to="/termos" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Termos</Link>
+          <Link to="/privacidade" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Privacidade</Link>
+          <a href="https://wa.me/5562999999999?text=Olá!%20Gostaria%20de%20falar%20com%20o%20comercial." target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Contato</a>
         </div>
       </div>
     </footer>

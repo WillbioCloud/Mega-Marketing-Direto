@@ -25,8 +25,9 @@ export function Navbar() {
           </div>
           {/* Desktop Nav */}
           <div className="hidden md:flex space-x-6 items-center">
-            <a href="#services" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Serviços</a>
-            <a href="#tech" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Tecnologia</a>
+            <Link to="/" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Início</Link>
+            <a href="/#services" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Serviços</a>
+            <a href="/#tech" className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Tecnologia</a>
             
             <div className="w-px h-6 bg-slate-200 mx-2"></div>
 
@@ -56,15 +57,22 @@ export function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
+            <Link
+              to="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+            >
+              Início
+            </Link>
             <a
-              href="#services"
+              href="/#services"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
             >
               Serviços
             </a>
             <a
-              href="#tech"
+              href="/#tech"
               onClick={() => setIsMobileMenuOpen(false)}
               className="px-4 py-3 text-sm font-medium text-slate-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
             >

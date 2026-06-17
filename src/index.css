@@ -5,6 +5,10 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: #fff1eb; /* Soft peach background */
   color: #0f172a;
