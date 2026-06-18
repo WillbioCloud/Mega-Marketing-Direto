@@ -1,23 +1,39 @@
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { TrendingUp, Sparkles, Activity, Building2, ShoppingBag, Store, Coffee } from "lucide-react";
+import { TrendingUp, Sparkles, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 export function Hero() {
+  const [partners, setPartners] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPartners = async () => {
+      const { data } = await supabase.from('partners').select('*').order('created_at', { ascending: false });
+      if (data) setPartners(data);
+    };
+    fetchPartners();
+  }, []);
+
+  // Multiplica os parceiros para garantir o loop infinito mesmo em telas ultrawide
+  const duplicatedPartners = Array(12).fill(partners).flat();
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 md:pt-16">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-8 items-center">
-        {/* Left Column - Copy */}
+    <div className="w-full overflow-hidden">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 md:pt-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-8 items-center">
+          {/* Left Column - Copy */}
         <div className="max-w-2xl">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100/50 border border-orange-200 text-orange-700 text-sm font-medium mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-100/50 border border-purple-100 text-purple-700 text-sm font-medium mb-6"
           >
             <Sparkles className="w-4 h-4" />
             Distribuição Inteligente 2.0
           </motion.div>
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
@@ -25,7 +41,7 @@ export function Hero() {
           >
             Gestão logística avançada para <span className="gradient-text">escalar</span> suas vendas B2B.
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -50,7 +66,7 @@ export function Hero() {
         </div>
 
         {/* Right Column - Live Tracker Mockup */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -58,9 +74,9 @@ export function Hero() {
         >
           {/* Subtle background glow */}
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-300/20 via-fuchsia-300/20 to-orange-300/20 blur-3xl rounded-full" />
-          
+
           {/* Main Card */}
-          <motion.div 
+          <motion.div
             animate={{ y: [0, -10, 0] }}
             transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
             className="relative bg-white/60 backdrop-blur-xl border border-white p-6 rounded-[2rem] shadow-2xl shadow-indigo-100 w-full max-w-md mx-auto"
@@ -82,8 +98,8 @@ export function Hero() {
 
             {/* Map/Image Placeholder */}
             <div className="rounded-2xl overflow-hidden bg-slate-100 aspect-video mb-6 relative border border-slate-200/50 shadow-inner group">
-              <img 
-                src="/img/Distribuicao-de-panfletos.webp" 
+              <img
+                src="/img/Distribuicao-de-panfletos.webp"
                 alt="Distribuição de panfletos"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
@@ -119,7 +135,7 @@ export function Hero() {
           </motion.div>
 
           {/* Floating badge - hidden on mobile to avoid overflow */}
-          <motion.div 
+          <motion.div
             animate={{ y: [0, 10, 0] }}
             transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
             className="hidden lg:flex absolute -right-6 top-12 bg-white rounded-xl shadow-lg border border-slate-100 p-3 items-center gap-3 z-10"
@@ -135,36 +151,56 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
+      </section>
 
-      {/* Trusted By / Parceiros Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.4 }}
-        className="mt-20 pt-10 border-t border-slate-200/60 pb-8"
-      >
-        <p className="text-center text-sm font-semibold text-slate-400 uppercase tracking-widest mb-8">
-          Empresas que confiam na nossa inteligência logística
-        </p>
-        <div className="flex flex-wrap justify-center gap-8 md:gap-16 items-center opacity-60 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-500">
-          {/* Logo 1 */}
-          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
-            <Building2 className="w-7 h-7 text-indigo-600" /> FBZ Construtora
+      {/* Trusted By / Parceiros Section - Edge to Edge */}
+      {partners.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
+          className="mt-20 pt-10 border-t border-slate-200/60 pb-8 relative w-full overflow-hidden"
+        >
+          <p className="text-center text-sm font-semibold text-slate-400 uppercase tracking-widest mb-8">
+            Empresas que confiam na nossa inteligência logística
+          </p>
+          
+          {/* Sombras laterais para fade-out no carrossel de ponta a ponta */}
+          <div className="absolute left-0 top-0 bottom-0 w-16 md:w-64 bg-gradient-to-r from-[#fff1eb] to-transparent z-10 pointer-events-none mt-16" />
+          <div className="absolute right-0 top-0 bottom-0 w-16 md:w-64 bg-gradient-to-l from-[#fff1eb] to-transparent z-10 pointer-events-none mt-16" />
+
+          {/* O Carrossel que pausa no Hover */}
+          <div className="flex w-max animate-scroll-infinite hover:[animation-play-state:paused]">
+            {duplicatedPartners.map((partner, index) => {
+              const imageContent = (
+                <img 
+                  src={partner.logo_url} 
+                  alt={partner.name} 
+                  title={partner.name}
+                  className="h-12 md:h-16 w-auto object-contain opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500 transform hover:scale-110" 
+                />
+              );
+
+              return (
+                <div 
+                  key={`${partner.id}-${index}`} 
+                  className="flex items-center justify-center w-[150px] md:w-[200px] flex-shrink-0"
+                >
+                  {partner.website_url ? (
+                    <a href={partner.website_url} target="_blank" rel="noopener noreferrer" className="block cursor-pointer">
+                      {imageContent}
+                    </a>
+                  ) : (
+                    <div className="cursor-default">
+                      {imageContent}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-          {/* Logo 2 */}
-          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
-            <ShoppingBag className="w-7 h-7 text-orange-500" /> Singapura Shopping
-          </div>
-          {/* Logo 3 */}
-          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
-            <Store className="w-7 h-7 text-emerald-600" /> Empadão Goiano
-          </div>
-          {/* Logo 4 */}
-          <div className="flex items-center gap-2 font-black text-xl text-slate-800 tracking-tighter">
-            <Coffee className="w-7 h-7 text-amber-700" /> Ollivander Café
-          </div>
-        </div>
-      </motion.div>
-    </section>
+        </motion.div>
+      )}
+    </div>
   );
 }

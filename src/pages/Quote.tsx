@@ -92,7 +92,7 @@ export default function Quote() {
     
     setIsLeadModalOpen(false);
     setIsSubmitting(false);
-    window.open(`https://wa.me/5562999999999?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/5564999391905?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const pinIconHTML = (isSelected: boolean, name: string) => `
