@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="border-t border-slate-200/60 bg-white/50 backdrop-blur-sm py-12 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
         <div className="flex items-center gap-2 group">
-          <img src="/favicon.ico" alt="Mega Marketing" className="w-9 h-9 object-contain" />
+          <img src="https://res.cloudinary.com/dxplpg36m/image/upload/v1783612532/Logo-MMD_snwopp.ico" alt="Mega Marketing" className="w-9 h-9 object-contain" />
           <span className="flex flex-col">
             <span className="font-bold text-xl tracking-tight text-slate-800 leading-none">
               Mega

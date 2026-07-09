@@ -12,7 +12,7 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16 md:h-20">
           <div className="flex-shrink-0 flex items-center">
             <Link to="/" className="flex items-center gap-2 group">
-              <img src="/favicon.ico" alt="Mega Marketing" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
+              <img src="https://res.cloudinary.com/dxplpg36m/image/upload/v1783612532/Logo-MMD_snwopp.ico" alt="Mega Marketing" className="w-9 h-9 object-contain group-hover:scale-105 transition-transform" />
               <span className="flex flex-col">
                 <span className="font-bold text-xl tracking-tight text-slate-800 leading-none">
                   Mega
